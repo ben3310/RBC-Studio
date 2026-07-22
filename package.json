@@ -13,7 +13,12 @@
     "test:milestone1": "npm run test:migrations",
     "verify:config": "node scripts/verify-config.mjs",
     "verify:migrations": "node scripts/verify-migrations.mjs",
-    "fixtures:contracts": "node scripts/generate-contract-fixtures.mjs"
+    "fixtures:contracts": "node scripts/generate-contract-fixtures.mjs",
+    "db:init": "npx supabase init --workdir infra",
+    "db:login": "npx supabase login",
+    "db:link": "npx supabase link --workdir infra",
+    "db:push": "npx supabase db push --workdir infra",
+    "db:diff": "npx supabase db diff --workdir infra"
   },
   "devDependencies": {
     "playwright": "^1.61.1"
