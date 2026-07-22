@@ -13,7 +13,7 @@ const ORDER=[
   'assets_rights_and_attributes','factory_content_and_approvals',
   'destinations_and_accounts','jobs_publications_and_metrics',
   'audit_and_webhooks','constraints_indexes_and_triggers',
-  'row_level_security','storage_policies','rpc_functions','sync_bridge'
+  'row_level_security','storage_policies','rpc_functions','sync_bridge','worker_leases'
 ];
 
 const files=fs.readdirSync(dir).filter(file=>file.endsWith('.sql')).sort();
@@ -228,6 +228,16 @@ reject(part('sync_bridge'),'grant execute on function public.sync_local_campaign
   'anonymous users must not execute campaign sync');
 expect(part('sync_bridge'),'last_sync_idempotency_key',
   'sync bridge must persist its idempotency key');
+for(const fn of ['worker_claim_job','worker_heartbeat_job','worker_complete_job','worker_fail_job']){
+  expect(part('worker_leases'),`function public.${fn}`,
+    `durable worker RPC ${fn} is missing`);
+}
+expect(part('worker_leases'),'for update skip locked',
+  'worker claims must be atomic and concurrency-safe');
+expect(part('worker_leases'),'conflicting duplicate completion',
+  'worker completion must reject divergent duplicate results');
+expect(part('worker_leases'),'grant execute on function public.worker_claim_job(text[],text,integer) to service_role',
+  'worker claim must be service-role-only');
 
 console.log(
   `Migration scaffold verified: ${files.length} files, ${TABLES.length} core tables, `+

@@ -13,17 +13,21 @@ export function initContentFactory({canvasStudio,templates,getFacts,getCampaignI
   const licenseRef=document.getElementById('factoryLicenseRef');
   const rightsConfirmed=document.getElementById('factoryRightsConfirmed');
   const endpoint=document.getElementById('factoryCutoutEndpoint');
+  const cancelCutout=document.getElementById('factoryCancelCutout');
+  const retryCutout=document.getElementById('factoryCutoutRetry');
+  const fallbackCutout=document.getElementById('factoryCutoutFallback');
   const queue=document.getElementById('factoryQueue');
   const files=new Map(),urls=new Map();
-  let state={sourceClass:'owned',licenseRef:'',rightsConfirmed:false,cutoutEndpoint:'',palette:[],plan:null};
-  let busy=false;
+  let state={sourceClass:'owned',licenseRef:'',rightsConfirmed:false,cutoutEndpoint:'',cutoutQa:null,palette:[],plan:null};
+  let busy=false,cutoutController=null;
 
   function revokeUrls(){urls.forEach(url=>URL.revokeObjectURL(url));urls.clear();}
   function syncInputs(){sourceClass.value=state.sourceClass;licenseRef.value=state.licenseRef;rightsConfirmed.checked=state.rightsConfirmed;endpoint.value=state.cutoutEndpoint;renderPalette();}
-  function captureInputs(){state.sourceClass=sourceClass.value;state.licenseRef=licenseRef.value.trim();state.rightsConfirmed=rightsConfirmed.checked;state.cutoutEndpoint=endpoint.value.trim();if(state.plan)state.plan.source={class:state.sourceClass,licenseRef:state.licenseRef,rightsConfirmed:state.rightsConfirmed};}
+  function captureInputs(){state.sourceClass=sourceClass.value;state.licenseRef=licenseRef.value.trim();state.rightsConfirmed=rightsConfirmed.checked;state.cutoutEndpoint=endpoint.value.trim();if(state.plan)state.plan.source={...state.plan.source,class:state.sourceClass,licenseRef:state.licenseRef,rightsConfirmed:state.rightsConfirmed,cutout:state.cutoutQa};}
   function changed(){captureInputs();onChange(getState());}
   function setBusy(value){busy=value;document.getElementById('factoryGenerate').disabled=value;document.getElementById('factoryCutout').disabled=value;document.getElementById('factoryApproveSatellites').disabled=value;document.getElementById('factoryRejectDrafts').disabled=value;document.getElementById('factoryExport').disabled=value;document.getElementById('factoryPanel').classList.toggle('factory-busy',value);}
   function status(message){text('factoryStatus',message);}
+  function cutoutActions({running=false,review=false}={}){cancelCutout.hidden=!running;retryCutout.hidden=running||!review||!endpoint.value.trim();fallbackCutout.hidden=running||!review;}
   function progress(done,total){const percent=total?Math.round(done/total*100):0;document.getElementById('factoryProgressBar').style.width=percent+'%';document.getElementById('factoryProgress').setAttribute('aria-valuenow',String(percent));}
   function renderPalette(){const host=document.getElementById('factoryPalette');host.innerHTML='';(state.palette||[]).forEach(color=>{const chip=document.createElement('span');chip.className='factory-swatch';chip.style.background=color;chip.title=color;host.appendChild(chip);});}
 
@@ -75,12 +79,27 @@ export function initContentFactory({canvasStudio,templates,getFacts,getCampaignI
     finally{setBusy(false);}
   }
 
-  async function cutout(){
+  async function cutout(forceLocal=false){
     if(busy)return;const source=canvasStudio.getImageBlobs().bag;if(!source){status('Add the product image before running cutout assist.');return;}
-    setBusy(true);status(endpoint.value.trim()?'Sending image to the configured private cutout service…':'Running local plain-background cutout assist…');
-    try{const result=await runCutout(source,endpoint.value);await canvasStudio.replaceBagBlob(result);state.palette=await extractPalette(result);renderPalette();status('Cutout replaced the product layer. Check the canvas edge quality.');changed();}
-    catch(error){status('Cutout failed · '+error.message);}
-    finally{setBusy(false);}
+    cutoutController=new AbortController();setBusy(true);cutoutActions({running:true});
+    const serviceUrl=forceLocal?'':endpoint.value;
+    status(serviceUrl.trim()?'Sending image to the configured private cutout service…':'Running local plain-background cutout assist…');
+    try{
+      const result=await runCutout(source,serviceUrl,{signal:cutoutController.signal,retries:1});
+      state.cutoutQa={...result.qa,checkedAt:new Date().toISOString()};
+      const decision=result.qa.decision;
+      if(decision!=='fallback'&&decision!=='reject'){
+        await canvasStudio.replaceBagBlob(result.blob);state.palette=await extractPalette(result.blob);renderPalette();
+      }
+      if(decision==='accept')status('Cutout QA passed. Product layer replaced; factory assets still require review.');
+      else if(decision==='manual_review')status('Manual edge review required · compare handles, holes, stitching, and light/dark edges before approval.');
+      else if(decision==='fallback')status('Cutout QA requested fallback · source preserved. Retry the service or use the local assist.');
+      else status('Cutout rejected by QA · source preserved. Retry or use the local assist.');
+      cutoutActions({review:decision!=='accept'});changed();
+    }catch(error){
+      const cancelled=cutoutController.signal.aborted||error.name==='AbortError';
+      status(cancelled?'Cutout cancelled · source preserved.':'Cutout failed · '+error.message);cutoutActions({review:!cancelled});
+    }finally{cutoutController=null;setBusy(false);}
   }
 
   function review(id,next){state.plan=updateAssetStatus(state.plan,id,next);renderQueue();changed();status('Review state updated.');}
@@ -107,14 +126,17 @@ export function initContentFactory({canvasStudio,templates,getFacts,getCampaignI
 
   [sourceClass,licenseRef,rightsConfirmed,endpoint].forEach(element=>{element.addEventListener('input',changed);element.addEventListener('change',changed);});
   document.getElementById('factoryGenerate').addEventListener('click',generate);
-  document.getElementById('factoryCutout').addEventListener('click',cutout);
+  document.getElementById('factoryCutout').addEventListener('click',()=>cutout(false));
+  cancelCutout.addEventListener('click',()=>cutoutController?.abort('operator-cancelled'));
+  retryCutout.addEventListener('click',()=>cutout(false));
+  fallbackCutout.addEventListener('click',()=>cutout(true));
   document.getElementById('factoryApproveSatellites').addEventListener('click',approveSatellites);
   document.getElementById('factoryRejectDrafts').addEventListener('click',rejectDrafts);
   document.getElementById('factoryExport').addEventListener('click',exportApproved);
   queue.addEventListener('click',event=>{const button=event.target.closest('[data-factory-review]');if(!button||busy)return;const card=button.closest('[data-factory-asset]');review(card.dataset.factoryAsset,button.dataset.factoryReview);});
 
   function getState(){captureInputs();return clone(state);}
-  function setState(saved={}){files.clear();revokeUrls();state={sourceClass:saved.sourceClass||saved.plan?.source?.class||'owned',licenseRef:saved.licenseRef||saved.plan?.source?.licenseRef||'',rightsConfirmed:!!(saved.rightsConfirmed??saved.plan?.source?.rightsConfirmed),cutoutEndpoint:saved.cutoutEndpoint||'',palette:[...(saved.palette||saved.plan?.palette||[])],plan:clone(saved.plan||null)};syncInputs();renderQueue();progress(state.plan?.generatedAt?state.plan.assets.length:0,state.plan?.assets?.length||0);status(state.plan?'Factory plan restored · regenerate to rebuild previews and export files.':'Rights-gated · local-first · no credentials stored.');}
+  function setState(saved={}){files.clear();revokeUrls();state={sourceClass:saved.sourceClass||saved.plan?.source?.class||'owned',licenseRef:saved.licenseRef||saved.plan?.source?.licenseRef||'',rightsConfirmed:!!(saved.rightsConfirmed??saved.plan?.source?.rightsConfirmed),cutoutEndpoint:saved.cutoutEndpoint||'',cutoutQa:clone(saved.cutoutQa||saved.plan?.source?.cutout||null),palette:[...(saved.palette||saved.plan?.palette||[])],plan:clone(saved.plan||null)};syncInputs();cutoutActions({review:!!state.cutoutQa&&state.cutoutQa.decision!=='accept'});renderQueue();progress(state.plan?.generatedAt?state.plan.assets.length:0,state.plan?.assets?.length||0);status(state.plan?'Factory plan restored · regenerate to rebuild previews and export files.':'Rights-gated · local-first · no credentials stored.');}
   setState();
   return {getState,setState,generate,exportApproved};
 }

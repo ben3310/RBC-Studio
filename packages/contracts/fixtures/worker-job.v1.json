@@ -8,11 +8,16 @@
     "asset_id": "asset-fixture-original",
     "download_url": "https://storage.example.test/signed/original",
     "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "mime_type": "image/png",
+    "bytes": 1024,
     "options": {"quality": "hero"}
   },
   "output_uploads": [
     {"role": "cutout", "upload_url": "https://storage.example.test/signed/cutout"},
-    {"role": "mask", "upload_url": "https://storage.example.test/signed/mask"}
+    {"role": "mask", "upload_url": "https://storage.example.test/signed/mask"},
+    {"role": "preview_light", "upload_url": "https://storage.example.test/signed/preview-light"},
+    {"role": "preview_dark", "upload_url": "https://storage.example.test/signed/preview-dark"},
+    {"role": "qa", "upload_url": "https://storage.example.test/signed/qa"}
   ],
-  "model_policy": {"purpose": "product_cutout", "allowed_revision": "benchmark-pending"}
+  "model_policy": {"purpose": "product_cutout", "provider_id": "birefnet", "allowed_revision": "benchmark-pending"}
 }

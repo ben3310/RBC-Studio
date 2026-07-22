@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "privacy": "public-safe",
+  "items": [
+    {
+      "id": "synthetic-thin-handle",
+      "source": "fixtures/thin-handle-source.pgm",
+      "reference_mask": "fixtures/thin-handle-mask.pgm",
+      "source_sha256": "ac9047c044c02f2cf6ff4180795c211c0ee71e744ce5d2a47a3b87d507aa6e0b",
+      "mask_sha256": "f6cff4170a68792a54dbad7961bb7493fc4ec9568013b69e58959218db6bdd4d",
+      "rights": "RBC-authored synthetic geometric fixture; no person, brand, or third-party pixels.",
+      "strata": ["thin-handle", "interior-gap", "uniform-background"]
+    },
+    {
+      "id": "synthetic-open-hole",
+      "source": "fixtures/open-hole-source.pgm",
+      "reference_mask": "fixtures/open-hole-mask.pgm",
+      "source_sha256": "31e1cbe915747ad1f2ad4c9664860ee03e8515003fa0c8f811463a6dfd7e0e5b",
+      "mask_sha256": "442ec19db767cc1f5c8f0a0137e8dbda08333b7b3a1a9c46aef0c85c95d32895",
+      "rights": "RBC-authored synthetic geometric fixture; no person, brand, or third-party pixels.",
+      "strata": ["open-region", "hole-preservation", "uniform-background"]
+    },
+    {
+      "id": "synthetic-low-contrast",
+      "source": "fixtures/low-contrast-source.pgm",
+      "reference_mask": "fixtures/low-contrast-mask.pgm",
+      "source_sha256": "63fe78f5a27a244da86f2ff8dfe56cad656357ba888ad9c03ef8bd3b0dd4dc4f",
+      "mask_sha256": "feb1eb39fd762c280f8935a4b0d3d278bcb73da034365b477236421df07b3687",
+      "rights": "RBC-authored synthetic geometric fixture; no person, brand, or third-party pixels.",
+      "strata": ["low-contrast", "simple-silhouette", "phone-like-compression-proxy"]
+    }
+  ]
+}

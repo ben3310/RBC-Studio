@@ -4,8 +4,8 @@ Version: 2.0
 Date: 2026-07-19  
 Owner: RareBagClub  
 Execution agent: Codex  
-Current application: RBC Studio 6.12.1  
-Current gate: Milestone 0 complete; Milestone 1 requires an operator-owned Supabase project
+Current application: RBC Studio 6.14.0
+Current gate: Milestone 2 local infrastructure complete; production cutout gate remains closed
 Last structurally validated: 2026-07-22
 
 ## 0. Document contract
@@ -1450,17 +1450,20 @@ Stop gate: obtain operator review of staging data, RLS evidence, and sync UX bef
 
 ### Milestone 2 - Cutout benchmark and durable GPU worker
 
-Status: Gated by Milestone 1 and model/license/download approval.
+Status: Local worker/benchmark infrastructure implemented on 2026-07-22 after
+explicit operator direction. Production remains gated by the corrected Milestone
+1 runtime evidence, private benchmark, model/license/download approval, and RTX
+3080 measurements.
 
-- [ ] M2.1 Add private benchmark manifest tooling and rights-safe checked-in fixtures.
-- [ ] M2.2 Implement Supabase outbound claim, lease, heartbeat, complete, fail, and cancellation.
-- [ ] M2.3 Implement signed storage download/upload with host/path/hash restrictions.
-- [ ] M2.4 Add per-job temp isolation, cleanup, resource limits, and graceful shutdown.
-- [ ] M2.5 Implement BiRefNet adapter with exact revision/model registry checks.
-- [ ] M2.6 Implement alpha refinement and cutout QA report.
+- [x] M2.1 Add private benchmark manifest tooling and rights-safe checked-in fixtures. Three synthetic fixtures verify the harness; private 100-image data remains outside Git.
+- [x] M2.2 Implement Supabase outbound claim, lease, heartbeat, complete, fail, and cancellation. Forward migration authored; staging apply/runtime test pending.
+- [x] M2.3 Implement signed storage download/upload with host/path/hash restrictions. Offline policy/rejection tests pass.
+- [x] M2.4 Add per-job temp isolation, cleanup, resource limits, and graceful shutdown.
+- [x] M2.5 Implement BiRefNet adapter with exact revision/model registry checks. Adapter is fail-closed; approved revision/artifact/runner remain absent.
+- [x] M2.6 Implement alpha refinement and cutout QA report. Learned-model quality remains unmeasured.
 - [ ] M2.7 Implement optional SAM-assisted repair evaluation.
 - [ ] M2.8 Implement one approved commercial fallback adapter with cost/redaction tests.
-- [ ] M2.9 Add manual edge-review route and rerun/fallback control.
+- [x] M2.9 Add manual edge-review route and rerun/fallback control. Browser endpoint responses fail to manual review unless explicit governed QA headers are present.
 - [ ] M2.10 Publish aggregate benchmark report and select the production provider.
 - [ ] M2.11 Add Docker/cloud image only after the local runtime is pinned.
 
@@ -1725,7 +1728,26 @@ The full program is complete only when:
   required campaign, and the wrong JWT claim setting; the corrected checked-in
   gate must be rerun before M1.5 is marked complete.
 
+### 2026-07-22 - Milestone 2 local cutout and durable-worker foundation
+
+- Added atomic claim, lease, heartbeat, cancellation, retry, completion, and
+  expired-lease recovery behavior, plus a forward-only service-role RPC migration.
+- Added outbound-only signed-storage transfer controls, source/output hash checks,
+  per-job temporary isolation, cleanup, byte/pixel limits, and graceful shutdown.
+- Added a fail-closed BiRefNet adapter and model registry. No revision, weight,
+  runner, license evidence, or production activation is silently assumed.
+- Added alpha refinement, deterministic QA artifacts, manual-review routing,
+  retry/cancel/local-fallback browser controls, and preservation of source assets.
+- Added a rights-safe synthetic benchmark harness and three checked-in fixtures.
+  These validate the harness only; they do not satisfy the private production gate.
+- Sixteen worker tests, repository-wide Milestone 2 checks, contract reproducibility,
+  lint, and the browser E2E must remain green in CI.
+- Production remains blocked on the corrected staging RLS rerun, the private
+  100-image benchmark, exact model/license approval, RTX 3080 measurements,
+  fallback/SAM comparisons, and operator provider selection.
+
 ### Next entry
 
-After explicit CLI/container authorization, record the first local reset, database
-lint, pgTAP, and RLS-negative evidence. Do not link staging in that same step.
+Record the authorized staging application/runtime evidence for the worker-leases
+migration and the private benchmark aggregate. Never record private images,
+signed URLs, secrets, or unapproved model artifacts in Git.

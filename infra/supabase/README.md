@@ -24,7 +24,8 @@ again against staging before M1.5 is marked complete.
 Local scaffold files:
 
 - `config.toml`: secret-free local configuration with no remote reference;
-- `migrations/`: the 12 ordered migrations reported applied to staging;
+- `migrations/`: 12 base migrations reported applied to staging, followed by
+  two forward-only sync/worker migrations that are authored but not reported applied;
 - `seed.sql`: deterministic synthetic records only, with no Auth identities;
 - `tests/0001_schema.test.sql`: pgTAP smoke plan for the first authorized reset.
 - `tests/rls_negative_checks.sql`: transactional nine-case local RLS gate.
@@ -33,7 +34,7 @@ Local scaffold files:
 
 `npm run verify:migrations` parses SQL text without a database and verifies:
 
-- all 12 migrations are timestamped and in the §7.1 order;
+- all 14 migrations are timestamped and in their required forward-only order;
 - all 20 required core tables are declared;
 - all 17 cross-table relationships are constrained to one organization;
 - every core table is covered by forced RLS;

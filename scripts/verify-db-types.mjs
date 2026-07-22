@@ -52,5 +52,9 @@ for(const fn of manifest.rpc||[]){
   const present=sql.includes(`function app.${fn}`)||sql.includes(`function ${fn}`)||sql.includes(`create or replace function public.${fn}`);
   assert.ok(present,`RPC ${fn} is used by the app but missing from migrations`);
 }
+for(const fn of manifest.workerRpc||[]){
+  const present=sql.includes(`create or replace function public.${fn}`);
+  assert.ok(present,`worker RPC ${fn} is missing from forward migrations`);
+}
 
 console.log(`DB drift check passed: ${migrationTables.length} tables aligned; ${Object.keys(manifest.appReads||{}).length} app-read table(s) column-verified.`);

@@ -1,7 +1,7 @@
 {
   "name": "rbc-studio",
   "private": true,
-  "version": "6.13.0",
+  "version": "6.14.0",
   "type": "module",
   "scripts": {
     "start": "npx --yes serve --listen 8080 .",
@@ -13,6 +13,7 @@
     "test:migrations": "node scripts/verify-migrations.mjs",
     "test:remote": "node tests/remote.mjs",
     "test:milestone1": "npm run test:milestone0 && npm run test:migrations && npm run verify:db-types && npm run test:remote",
+    "test:milestone2": "npm run test:milestone1 && python -m rbc_worker.benchmark --manifest benchmarks/cutout/manifest.json",
     "verify:config": "node scripts/verify-config.mjs",
     "verify:migrations": "node scripts/verify-migrations.mjs",
     "verify:db-types": "node scripts/verify-db-types.mjs",

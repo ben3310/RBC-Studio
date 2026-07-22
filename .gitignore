@@ -21,6 +21,8 @@ __pycache__/
 
 # Model weights and private/generated media
 models/
+!config/models/
+!config/models/cutout-models.json
 model-cache/
 *.ckpt
 *.safetensors

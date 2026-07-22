@@ -26,5 +26,6 @@
   "appReads": {
     "app_content_items": ["id", "status", "destination_id", "platform", "content_type"]
   },
-  "rpc": ["sync_local_campaign"]
+  "rpc": ["sync_local_campaign"],
+  "workerRpc": ["worker_claim_job", "worker_heartbeat_job", "worker_complete_job", "worker_fail_job"]
 }

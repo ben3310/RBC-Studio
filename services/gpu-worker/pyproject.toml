@@ -9,16 +9,21 @@ packages = ["rbc_worker"]
 
 [project]
 name = "rbc-gpu-worker"
-version = "0.1.0"
+version = "0.2.0"
 description = "RBC Content Factory outbound GPU worker spine"
 requires-python = ">=3.12,<3.15"
 dependencies = [
   "fastapi>=0.115,<1",
+  "pillow>=11,<13",
   "uvicorn[standard]>=0.34,<1"
 ]
 
 [project.optional-dependencies]
 dev = ["pytest>=8,<10", "ruff>=0.12,<1"]
+
+[project.scripts]
+rbc-gpu-worker = "rbc_worker.runtime:main"
+rbc-cutout-benchmark = "rbc_worker.benchmark:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

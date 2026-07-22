@@ -22,13 +22,37 @@ export async function removeUniformBackground(blob){
   ctx.putImageData(pixels,0,0);return canvasBlob(canvas);
 }
 
-export async function runCutout(blob,endpoint=''){
+function validateCutoutEndpoint(value){
+  const parsed=new URL(value);
+  const local=['localhost','127.0.0.1'].includes(parsed.hostname);
+  if(parsed.protocol!=='https:'&&!(local&&parsed.protocol==='http:'))throw new Error('Cutout endpoint must use HTTPS outside local development.');
+  if(parsed.username||parsed.password||parsed.hash)throw new Error('Cutout endpoint contains forbidden URL credentials or fragments.');
+  return parsed.toString();
+}
+
+export async function runCutout(blob,endpoint='',{signal,retries=1,timeoutMs=120000}={}){
   const url=String(endpoint||'').trim();
-  if(!url)return removeUniformBackground(blob);
-  const body=new FormData();body.append('image',blob,'product.png');
-  const response=await fetch(url,{method:'POST',body});
-  if(!response.ok)throw new Error(`Cutout service returned ${response.status}.`);
-  const result=await response.blob();if(!result.type.startsWith('image/'))throw new Error('Cutout service did not return an image.');return result;
+  if(!url)return {blob:await removeUniformBackground(blob),qa:{decision:'manual_review',provider:'browser-uniform-v1',score:null}};
+  const safeUrl=validateCutoutEndpoint(url);
+  let lastError;
+  for(let attempt=0;attempt<=retries;attempt++){
+    const controller=new AbortController();const timer=setTimeout(()=>controller.abort('timeout'),timeoutMs);
+    const abort=()=>controller.abort(signal.reason||'cancelled');signal?.addEventListener('abort',abort,{once:true});
+    try{
+      const body=new FormData();body.append('image',blob,'product.png');
+      const response=await fetch(safeUrl,{method:'POST',body,signal:controller.signal,redirect:'error'});
+      if(!response.ok){const error=new Error(`Cutout service returned ${response.status}.`);error.retryable=response.status>=500;throw error;}
+      const result=await response.blob();if(!result.type.startsWith('image/'))throw new Error('Cutout service did not return an image.');
+      const reported=response.headers.get('x-rbc-qa-decision');
+      const decision=['accept','fallback','manual_review','reject'].includes(reported)?reported:'manual_review';
+      const rawScore=response.headers.get('x-rbc-qa-score');const score=rawScore===null?NaN:Number(rawScore);
+      return {blob:result,qa:{decision,score:Number.isFinite(score)?score:null,provider:response.headers.get('x-rbc-provider')||'private-service',revision:response.headers.get('x-rbc-model-revision')||'unknown',jobId:response.headers.get('x-rbc-job-id')||''}};
+    }catch(error){
+      lastError=error;
+      if(controller.signal.aborted||attempt>=retries||error.retryable===false)throw error;
+    }finally{clearTimeout(timer);signal?.removeEventListener('abort',abort);}
+  }
+  throw lastError;
 }
 
 export async function makePinterestPin(sourceBlob,{title='Rare Bag Archive',subtitle='Curated by @rarebagclub'}={}){

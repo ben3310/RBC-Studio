@@ -23,7 +23,7 @@ jobs:
       - run: npm ci
       - run: python -m pip install -e "services/gpu-worker[dev]"
       - run: npm run verify:config
-      - run: npm run test:milestone1
+      - run: npm run test:milestone2
       - run: python -m ruff check services/gpu-worker
       - run: npm run fixtures:contracts
       - name: Contract fixtures remain reproducible
