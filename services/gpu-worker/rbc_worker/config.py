@@ -25,7 +25,7 @@ class WorkerSettings:
     model_cache_dir: str = ""
 
     @classmethod
-    def from_env(cls, source: Mapping[str, str] | None = None) -> "WorkerSettings":
+    def from_env(cls, source: Mapping[str, str] | None = None) -> WorkerSettings:
         env = os.environ if source is None else source
         queues = tuple(part.strip() for part in env.get("RBC_WORKER_QUEUES", "noop").split(",") if part.strip())
         if not queues or any(not QUEUE_PATTERN.fullmatch(queue) for queue in queues):
