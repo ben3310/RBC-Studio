@@ -1,71 +1,89 @@
 # Supabase scaffold (Milestone 1)
 
 This directory is the **local, not-yet-applied** database scaffold for the RBC
-Content Factory. It corresponds to `CODEX_IMPLEMENTATION.md` §7 and step 1 of the
-§28 Milestone 1 work packet: *"Add local Supabase scaffold and migration-test
-scripts without connecting the PWA."*
+Content Factory. It corresponds to `CODEX_IMPLEMENTATION.md` §7 and M1.1 of the
+§28 work packet: local configuration, ordered migrations, synthetic seed data,
+and migration tests without connecting the PWA.
 
 ## Status: NOT APPLIED
 
-Nothing here has been applied to any Supabase project. No secrets, no CLI link,
-no PWA connection, no external calls have been made. The remote boundary in the
-app remains default-off (`parseRemoteFactoryConfig` → `mode: 'local'`).
+Nothing here has been applied to any Supabase project. No secrets, CLI package,
+container runtime, CLI link, PWA connection, or remote database call was added.
+The app remains default-off (`parseRemoteFactoryConfig` → `mode: "local"`).
+
+Local scaffold files:
+
+- `config.toml`: secret-free, unlinked CLI configuration;
+- `migrations/`: the 12 ordered, not-yet-applied migrations;
+- `seed.sql`: deterministic synthetic records only, with no Auth identities;
+- `tests/0001_schema.test.sql`: pgTAP smoke plan for the first authorized reset.
 
 ## What is verified offline
 
-`npm run verify:migrations` parses the SQL text (no database connection) and
-asserts the §7 invariants:
+`npm run verify:migrations` parses SQL text without a database and verifies:
 
-- all 12 migrations present, timestamp-prefixed, in the §7.1 order;
-- all 20 required tables created;
-- every tenant table is covered by the RLS enable/force migration;
-- the flagship destination cannot be created or updated to be auto-publishable
-  (`kind='flagship'` implies `manual_only` + `requires_approval`, plus a guard
-  trigger that rejects weakening);
-- POA/price doctrine encoded on `app_pieces` (a fixed price requires an amount;
-  price-on-request forbids one);
-- `app_audit_events` is append-only (update/delete guard trigger);
-- required uniqueness (archive_no, idempotency_key, platform_post_id,
-  metric observation, webhook replay);
-- storage keys are server-generated via RPC and no bucket is public.
+- all 12 migrations are timestamped and in the §7.1 order;
+- all 20 required core tables are declared;
+- all 17 cross-table relationships are constrained to one organization;
+- every core table is covered by forced RLS;
+- flagship destinations cannot be created weakly, weakened, or deleted;
+- flagship/manual-only items cannot create publish jobs;
+- fixed prices require a positive amount and currency; POA forbids an amount;
+- audit rows and source-asset binary rows are immutable;
+- approvals bind the authenticated reviewer and current binary/copy fingerprints;
+- required idempotency and replay uniqueness exists;
+- private storage excludes analysts from originals and rights proofs;
+- all `SECURITY DEFINER` RPCs revoke default public execution;
+- approval and publish states match their versioned JSON contracts;
+- local config, synthetic seed, and pgTAP smoke-plan structure are present.
 
-## Gated: applying these migrations
+This validation is intentionally stronger than keyword presence, but it cannot
+replace PostgreSQL parsing or runtime RLS tests.
 
-Per §28, **do not apply until the operator authorizes** and supplies:
+## Gated: installing or running Supabase
 
-1. a Supabase staging project (or permission to create one) + chosen region /
-   data-residency preference;
-2. owner authentication method;
-3. approved secret storage for the local worker / n8n;
-4. permission to install or link the Supabase CLI;
-5. confirmation that only synthetic/test data is used until the RLS negative
-   tests pass.
+Per §28, **do not install, start, reset, link, or apply** until the operator
+authorizes:
 
-Once authorized, the apply order is:
+1. the CLI and Docker-compatible runtime;
+2. a Supabase staging project or permission to create one;
+3. region/data-residency preference;
+4. owner authentication method;
+5. approved worker/n8n secret storage;
+6. synthetic-only data until every RLS negative test passes.
 
+The CLI and container runtime are not installed on this machine. After local
+runtime authorization, run from the repository root:
+
+```powershell
+Set-Location infra
+supabase start
+supabase db reset --local
+supabase db lint --level error
+supabase test db
 ```
-supabase db reset            # local shadow db, or link to staging
-supabase migration up        # applies 20260722090001..012 in order
-# then run the RLS negative-case suite (§7.4) against the shadow/staging db
-```
 
-## Known items deferred to the gated apply step (not offline-checkable)
+Those commands discover `infra/supabase/config.toml`. Never substitute
+`--linked` until the local reset, lint, pgTAP, and RLS negative suite pass and a
+staging apply is separately authorized.
 
-These require a live database and are intentionally **not** in the scaffold:
+## Still deferred to the first authorized runtime
 
-- **Service roles.** Narrow Postgres roles for the worker and publisher services
-  (their column/row grants per the §7.4 matrix) are created at apply-time; they
-  depend on the live project's role setup.
-- **Token isolation.** `app_social_accounts.token_secret_ref` holds only an
-  opaque reference, never a token. Full column-level hiding from operator/analyst
-  reads is implemented at apply-time via a restricted view or a split secrets
-  table (Postgres has no native column RLS).
-- **RLS negative-case tests** (§7.4): cross-org reads return zero rows; guessed
-  storage keys are undownloadable; analyst cannot read originals or token refs;
-  reviewer cannot mutate facts; operator cannot create a flagship publish job.
-  These run against the applied database and must pass before any real data.
+- **SQL/runtime validation.** PostgreSQL has not parsed these migrations. The
+  first local reset and `db lint` may reveal syntax or catalog assumptions.
+- **Service roles.** Worker and publisher roles need narrow grants matching §7.4.
+- **Account projection.** `token_secret_ref` is only an opaque reference and the
+  base account table is owner-only. A non-secret projection is required before
+  operator/reviewer account views.
+- **RLS negative cases.** Cross-org reads, guessed storage keys, analyst access,
+  reviewer fact mutation, service isolation, and flagship scheduling must fail
+  against the running database.
+- **Upload completion.** The gated upload service must move the object to the
+  final hash-bearing key before calling the revoked completion RPC.
 
-## Migrations are append-only after a shared apply
+## Migration immutability
 
-Once a migration has been applied to staging or production, do not edit it. Add a
-forward migration and document the repair path (§7.1).
+These files may be repaired while status remains NOT APPLIED. After any shared
+staging or production apply, never edit an applied migration. Add a forward
+migration and documented repair path.
+

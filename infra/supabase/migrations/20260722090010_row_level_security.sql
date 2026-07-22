@@ -15,7 +15,8 @@ begin
     'app_source_assets','app_rights_records','app_asset_attributes',
     'app_factory_runs','app_content_items','app_content_item_assets','app_approvals',
     'app_destinations','app_social_accounts','app_job_runs','app_publish_jobs',
-    'app_publications','app_metric_observations','app_audit_events','app_webhook_events'
+    'app_publications','app_metric_observations','app_audit_events','app_webhook_events',
+    'app_model_registry'
   ] loop
     execute format('alter table %I enable row level security', t);
     execute format('alter table %I force row level security', t);
@@ -53,25 +54,44 @@ create policy items_write on app_content_items for all
 -- approvals: reviewers+owners decide; reviewer cannot mutate facts (separate table)
 create policy approvals_read on app_approvals for select using (app.is_member(organization_id));
 create policy approvals_write on app_approvals for insert
-  with check (app.has_role(organization_id, array['owner','reviewer']::app.member_role[]));
+  with check (
+    app.has_role(organization_id, array['owner','reviewer']::app.member_role[])
+    and reviewer_id = app.uid()
+  );
 
--- generic member-read + owner/operator-write for tenant tables that carry
--- organization_id directly
-do $$
-declare t text;
-begin
-  foreach t in array array[
-    'app_source_assets','app_rights_records',
-    'app_factory_runs','app_destinations',
-    'app_social_accounts','app_job_runs','app_publish_jobs',
-    'app_publications','app_metric_observations','app_webhook_events'
-  ] loop
-    execute format($f$create policy %1$s_read on %1$I for select using (app.is_member(organization_id))$f$, t);
-    execute format($f$create policy %1$s_write on %1$I for all
-      using (app.has_role(organization_id, array['owner','operator']::app.member_role[]))
-      with check (app.has_role(organization_id, array['owner','operator']::app.member_role[]))$f$, t);
-  end loop;
-end $$;
+-- Originals and rights proofs are never visible to analysts. Source rows have
+-- no interactive write path; server-generated upload completion owns inserts.
+create policy source_assets_read on app_source_assets for select
+  using (app.has_role(organization_id, array['owner','operator','reviewer']::app.member_role[]));
+create policy rights_read on app_rights_records for select
+  using (app.has_role(organization_id, array['owner','operator','reviewer']::app.member_role[]));
+create policy rights_write on app_rights_records for all
+  using (app.has_role(organization_id, array['owner','operator']::app.member_role[]))
+  with check (app.has_role(organization_id, array['owner','operator']::app.member_role[]));
+
+create policy runs_read on app_factory_runs for select using (app.is_member(organization_id));
+create policy runs_write on app_factory_runs for all
+  using (app.has_role(organization_id, array['owner','operator']::app.member_role[]))
+  with check (app.has_role(organization_id, array['owner','operator']::app.member_role[]));
+
+create policy destinations_read on app_destinations for select using (app.is_member(organization_id));
+create policy destinations_write on app_destinations for all
+  using (app.has_role(organization_id, array['owner']::app.member_role[]))
+  with check (app.has_role(organization_id, array['owner']::app.member_role[]));
+
+-- The token reference column is intentionally visible only to owners until a
+-- restricted account projection is added at the applied-database gate.
+create policy accounts_owner_only on app_social_accounts for all
+  using (app.has_role(organization_id, array['owner']::app.member_role[]))
+  with check (app.has_role(organization_id, array['owner']::app.member_role[]));
+
+-- Operational rows are readable to members but mutations are service/RPC-only.
+create policy job_runs_read on app_job_runs for select using (app.is_member(organization_id));
+create policy publish_jobs_read on app_publish_jobs for select using (app.is_member(organization_id));
+create policy publications_read on app_publications for select using (app.is_member(organization_id));
+create policy metrics_read on app_metric_observations for select using (app.is_member(organization_id));
+create policy webhooks_owner_read on app_webhook_events for select
+  using (app.has_role(organization_id, array['owner']::app.member_role[]));
 
 -- join tables have no organization_id: gate them through their parent row
 create policy attrs_read on app_asset_attributes for select
@@ -94,3 +114,11 @@ create policy item_assets_write on app_content_item_assets for all
 
 -- audit: members read own org; no member write path (service/definer only)
 create policy audit_read on app_audit_events for select using (app.is_member(organization_id));
+
+-- model_registry is global operational configuration. RLS is forced and no
+-- interactive policy is created; a narrow service/admin grant is added only at apply.
+
+revoke all on function app.is_member(uuid) from public, anon;
+revoke all on function app.has_role(uuid, app.member_role[]) from public, anon;
+grant execute on function app.is_member(uuid) to authenticated;
+grant execute on function app.has_role(uuid, app.member_role[]) to authenticated;

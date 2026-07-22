@@ -15,8 +15,11 @@ create table app_destinations (
   updated_at timestamptz not null default now(),
   version integer not null default 1,
   unique (organization_id, code),
+  check (code = lower(code) and code ~ '^[a-z][a-z0-9_-]{1,63}$'),
   -- flagship is permanently manual + approval-gated
-  check (kind <> 'flagship' or (manual_only = true and requires_approval = true))
+  check (kind <> 'flagship' or (manual_only = true and requires_approval = true)),
+  check (code <> 'flagship' or
+    (kind = 'flagship' and manual_only = true and requires_approval = true))
 );
 
 create table app_social_accounts (
@@ -49,7 +52,19 @@ alter table app_content_items
 create or replace function app.protect_flagship()
 returns trigger language plpgsql as $$
 begin
-  if old.kind = 'flagship' then
+  if tg_op = 'DELETE' then
+    if old.kind = 'flagship' or old.code = 'flagship' then
+      raise exception 'flagship destination % cannot be deleted', old.id
+        using errcode = 'check_violation';
+    end if;
+    return old;
+  end if;
+  if (new.kind = 'flagship' and old.kind <> 'flagship')
+    or (new.code = 'flagship' and old.code <> 'flagship') then
+    raise exception 'an existing destination cannot be repurposed as flagship'
+      using errcode = 'check_violation';
+  end if;
+  if old.kind = 'flagship' or old.code = 'flagship' then
     if new.kind <> 'flagship' or new.manual_only = false or new.requires_approval = false then
       raise exception 'flagship destination % cannot be weakened', old.id
         using errcode = 'check_violation';
@@ -58,7 +73,7 @@ begin
   return new;
 end $$;
 
-create trigger trg_flagship_guard before update on app_destinations
+create trigger trg_flagship_guard before update or delete on app_destinations
   for each row execute function app.protect_flagship();
 create trigger trg_dest_touch before update on app_destinations
   for each row execute function app.touch_updated_at();

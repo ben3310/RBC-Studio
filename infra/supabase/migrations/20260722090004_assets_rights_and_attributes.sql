@@ -7,12 +7,14 @@ create table app_source_assets (
   piece_id uuid references app_pieces(id) on delete set null,
   campaign_id uuid references app_campaigns(id) on delete set null,
   kind app.asset_kind not null,
+  storage_bucket text not null
+    check (storage_bucket in ('product-originals','derived-assets')),
   storage_key text not null,             -- server-generated; see migration 11 storage design
   sha256 text not null check (sha256 ~ '^[0-9a-f]{64}$'),
   mime_type text not null,
-  width integer,
-  height integer,
-  bytes bigint,
+  width integer check (width > 0),
+  height integer check (height > 0),
+  bytes bigint check (bytes >= 0),
   color_profile text,
   exif_removed_at timestamptz,
   parent_asset_id uuid references app_source_assets(id) on delete set null,
@@ -36,11 +38,12 @@ create table app_rights_records (
   territories text[] not null default '{}',
   allowed_uses text[] not null default '{}',
   proof_storage_key text,
-  confirmed_by uuid,
+  confirmed_by uuid references auth.users(id) on delete set null,
   confirmed_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  version integer not null default 1
+  version integer not null default 1,
+  check (valid_until is null or valid_from is null or valid_until >= valid_from)
 );
 
 create table app_asset_attributes (

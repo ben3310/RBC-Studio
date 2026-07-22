@@ -14,7 +14,7 @@ create table app_organizations (
 
 create table app_organization_members (
   organization_id uuid not null references app_organizations(id) on delete cascade,
-  user_id uuid not null,                 -- references auth.users(id) in Supabase
+  user_id uuid not null references auth.users(id) on delete cascade,
   role app.member_role not null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -31,22 +31,22 @@ create trigger trg_member_touch before update on app_organization_members
 -- ---- RLS predicates (used by every tenant table in migration 10) ----------
 -- current authenticated user (Supabase auth.uid()); NULL outside a user session
 create or replace function app.uid()
-returns uuid language sql stable as $$
-  select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid
+returns uuid language sql stable set search_path = '' as $$
+  select auth.uid()
 $$;
 
 create or replace function app.is_member(org uuid)
-returns boolean language sql stable security definer set search_path = app, public as $$
+returns boolean language sql stable security definer set search_path = '' as $$
   select exists (
-    select 1 from app_organization_members m
+    select 1 from public.app_organization_members m
     where m.organization_id = org and m.user_id = app.uid()
   )
 $$;
 
 create or replace function app.has_role(org uuid, roles app.member_role[])
-returns boolean language sql stable security definer set search_path = app, public as $$
+returns boolean language sql stable security definer set search_path = '' as $$
   select exists (
-    select 1 from app_organization_members m
+    select 1 from public.app_organization_members m
     where m.organization_id = org and m.user_id = app.uid() and m.role = any(roles)
   )
 $$;

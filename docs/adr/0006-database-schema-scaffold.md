@@ -1,57 +1,66 @@
 # ADR 0006: Database schema scaffold and invariants at the data layer
 
-Status: Accepted
+Status: Accepted  
 Date: 2026-07-22
 
 ## Context
 
-Milestone 1 introduces the Supabase database (`CODEX_IMPLEMENTATION.md` §7). The
-schema must be authored locally and verifiable in CI before any shared apply,
-because migrations become append-only once applied. Several product invariants
-(flagship stays manual, scarcity claims stay literal, audit is tamper-evident,
-rights are inspectable) are too important to leave to application code alone.
+Milestone 1 introduces the Supabase database (`CODEX_IMPLEMENTATION.md` §7).
+Migrations must be authored and checked locally before any shared apply because
+they become append-only afterward. Flagship policy, literal scarcity, rights,
+tenant isolation, approvals, and audit integrity are too important to depend on
+application code alone.
 
 ## Decision
 
-1. **Local scaffold first, apply gated.** All 12 migrations live under
-   `infra/supabase/migrations/` and are validated offline by
-   `scripts/verify-migrations.mjs`. Applying them requires operator authorization
-   (staging project, region, secrets, CLI link) per §28. Nothing here connects to
-   a database or the PWA.
+1. **Local scaffold first; runtime apply gated.** The committed scaffold contains
+   a secret-free `config.toml`, 12 ordered migrations, synthetic `seed.sql`, an
+   offline validator, and a pgTAP smoke plan. Installing/running the CLI or
+   container runtime and linking/applying a project require separate authority.
 
-2. **Enums for stable taxonomies, text+check for workflow states.** Roles, asset
+2. **Enums for stable taxonomies; text checks for workflow states.** Roles, asset
    kinds, rights classes, destination kinds, content types, CTA types, and actor
-   types are Postgres enums (bounded, stable; grow with `ALTER TYPE ADD VALUE`).
-   Lifecycle states (piece/campaign/content/job/publish) are `text` + `check`
-   constraints, because a state machine is more likely to need a value removed or
-   reordered, which a forward migration can do by swapping the constraint without
-   recreating a type used across columns.
+   types are enums. Lifecycle states remain text plus check constraints so a
+   forward migration can evolve state machines without recreating shared types.
 
-3. **Invariants enforced in the database, not only in `policy-core`.**
-   - Flagship: a check constraint plus a `protect_flagship` guard trigger make it
-     impossible to create or weaken a flagship destination into an
-     auto-publishable one. This mirrors ADR 0005 at the storage layer.
-   - Literal scarcity / POA: `app_pieces` check constraints require an amount for
-     fixed prices and forbid one for price-on-request.
-   - Audit: `app_audit_events` has update/delete guard triggers; append-only.
-   - AI disclosure: `synthetic_media` content must carry `disclosure_text`.
-   - Immutable binaries: `app_source_assets` has no `updated_at`/`version`;
-     changed bytes create a new row, and the storage key embeds the content hash.
+3. **Product invariants live in PostgreSQL.**
+   - Flagship code/kind implies manual-only and approval-required.
+   - A trigger prevents weakening or deleting an existing flagship.
+   - A publish-job trigger rejects flagship/manual-only, stale, unapproved, or
+     relationship-mismatched content.
+   - Fixed price requires a positive minor-unit amount and currency; POA forbids
+     an amount.
+   - Audit rows are append-only.
+   - Synthetic media requires a non-empty disclosure.
+   - Source binary rows cannot be edited in place.
+   - Approvals bind the authenticated reviewer and final content fingerprints.
 
-4. **RLS forced on every tenant table.** Policies key off `app.is_member` /
-   `app.has_role` against `app_organization_members`. Join tables without their
-   own `organization_id` (`app_asset_attributes`, `app_content_item_assets`) are
-   gated through their parent row. Service roles and token-column isolation are
-   applied at the gated apply step because they depend on the live project.
+4. **Tenant identity travels with every relationship.** Child/parent foreign keys
+   include `organization_id`. Join tables without that column compare both
+   parents in a trigger. An opaque UUID alone is never tenant proof.
+
+5. **RLS is forced and role-specific.** Analysts cannot read original asset rows
+   or private storage. Account rows containing token references are owner-only
+   until a restricted projection exists. Operational write paths remain
+   service/RPC-only.
+
+6. **Privileged paths start inert.** Every `SECURITY DEFINER` upload/worker RPC
+   pins an empty `search_path` and revokes PostgreSQL's default PUBLIC execute
+   grant. The first authorized runtime must add explicit narrow grants.
+
+7. **Contracts cannot silently drift.** The offline validator compares approval
+   and publish-state checks with the versioned JSON schemas.
 
 ## Consequences
 
-- Schema regressions are caught in CI offline (`npm run verify:migrations`),
-  before any irreversible apply.
-- The flagship, scarcity, audit, and disclosure guarantees survive an application
-  bug or a direct SQL client, not just the happy path.
-- The offline validator checks structure and text invariants, not runtime RLS
-  behavior; the §7.4 negative-case tests still run against the applied database
-  and are the gate before real data enters.
-- Enum growth is easy; enum value removal is not — accepted, because the enum sets
-  chosen are genuinely stable taxonomies.
+- Static CI catches ordering, structure, contract, tenant, RLS, storage, and
+  privilege regressions before a database exists.
+- The first local reset is still mandatory: static parsing cannot prove
+  PostgreSQL syntax, trigger execution, RLS behavior, or Storage catalog behavior.
+- Local pgTAP smoke tests are committed but intentionally unexecuted until CLI
+  and container authorization.
+- Any repair is allowed while the scaffold is explicitly NOT APPLIED. After a
+  shared apply, repairs must be forward migrations.
+- Enum growth is simple; enum removal is intentionally harder because these enum
+  sets are treated as stable taxonomies.
+

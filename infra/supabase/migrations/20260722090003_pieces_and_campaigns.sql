@@ -20,14 +20,16 @@ create table app_pieces (
   product_url text,
   facts_version integer not null default 1,
   facts_confirmed_at timestamptz,
-  facts_confirmed_by uuid,
+  facts_confirmed_by uuid references auth.users(id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   version integer not null default 1,
   unique (organization_id, archive_no),
   -- literal-scarcity + POA doctrine enforced at the data layer
-  check (price_mode = 'on_request' or price_amount_minor is not null),
-  check (price_mode = 'fixed' or price_amount_minor is null)
+  check (
+    (price_mode = 'fixed' and price_amount_minor > 0 and price_currency is not null)
+    or (price_mode = 'on_request' and price_amount_minor is null)
+  )
 );
 
 create table app_campaigns (

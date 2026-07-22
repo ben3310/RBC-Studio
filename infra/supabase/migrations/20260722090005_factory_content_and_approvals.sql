@@ -9,7 +9,7 @@ create table app_factory_runs (
   input_fingerprint text not null,
   status text not null default 'queued'
     check (status in ('queued','running','complete','failed','superseded')),
-  requested_by uuid,
+  requested_by uuid references auth.users(id) on delete set null,
   started_at timestamptz,
   completed_at timestamptz,
   created_at timestamptz not null default now(),
@@ -48,7 +48,7 @@ create table app_content_items (
   updated_at timestamptz not null default now(),
   version integer not null default 1,
   -- AI-persona content must carry a disclosure string
-  check (synthetic_media = false or disclosure_text is not null)
+  check (synthetic_media = false or coalesce(length(trim(disclosure_text)), 0) > 0)
 );
 
 create table app_content_item_assets (
@@ -63,10 +63,10 @@ create table app_approvals (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references app_organizations(id) on delete cascade,
   content_item_id uuid not null references app_content_items(id) on delete cascade,
-  decision text not null check (decision in ('approved','rejected')),
+  decision text not null check (decision in ('approved','rejected','changes_requested')),
   binary_fingerprint text not null,       -- must match the item at decision time
   copy_fingerprint text not null,
-  reviewer_id uuid not null,
+  reviewer_id uuid not null references auth.users(id) on delete restrict,
   note text,
   created_at timestamptz not null default now()
 );

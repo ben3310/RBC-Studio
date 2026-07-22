@@ -1406,7 +1406,9 @@ Rollback: remote remains disabled and the PWA uses existing local behavior.
 
 ### Milestone 1 - Supabase control plane and explicit migration bridge
 
-Status: Gated by operator-owned Supabase project/environment choice.
+Status: Local M1.1 complete. M1.2-M1.6 are authored but remain unchecked until
+PostgreSQL parses them and the runtime RLS/storage tests pass. CLI/container use,
+project linking, and every shared apply remain operator-gated.
 
 Prerequisites:
 
@@ -1418,12 +1420,12 @@ Prerequisites:
 
 Implementation tasks:
 
-- [ ] M1.1 Add `infra/supabase/config.toml`, migration layout, seed, and local test commands.
-- [ ] M1.2 Implement extensions, enums, identity, membership, pieces, campaigns, assets, and rights migrations.
-- [ ] M1.3 Implement factory, content, approval, destination, account, job, audit, and metrics migrations.
-- [ ] M1.4 Add timestamp/version/audit triggers and flagship/approval constraints.
-- [ ] M1.5 Enable/force RLS and implement the complete role matrix.
-- [ ] M1.6 Add private buckets, signed upload intents, hash verification, and storage policy tests.
+- [x] M1.1 Add `infra/supabase/config.toml`, migration layout, synthetic seed, offline validation, pgTAP smoke plan, and documented local test commands.
+- [ ] M1.2 Implement extensions, enums, identity, membership, pieces, campaigns, assets, and rights migrations. Locally authored; runtime verification pending.
+- [ ] M1.3 Implement factory, content, approval, destination, account, job, audit, and metrics migrations. Locally authored; runtime verification pending.
+- [ ] M1.4 Add timestamp/version/audit triggers and flagship/approval constraints. Locally authored and statically checked; runtime verification pending.
+- [ ] M1.5 Enable/force RLS and implement the complete role matrix. Locally authored; negative runtime suite pending.
+- [ ] M1.6 Add private buckets, signed upload intents, hash verification, and storage policy tests. Bucket/RLS/RPC scaffold authored; signed-intent service and runtime tests pending.
 - [ ] M1.7 Generate database types and add drift check.
 - [ ] M1.8 Add browser authentication behind `RBC_REMOTE_FACTORY`.
 - [ ] M1.9 Implement local, remote, and hybrid repository adapters.
@@ -1615,21 +1617,27 @@ Rollback: retire/disable the persona destination and preserve core assets.
 
 ## 28. Immediate next work packet: Milestone 1
 
+Local status (2026-07-22): step 1 is complete and steps 2-4 have an offline
+scaffold, but PostgreSQL has not parsed or executed it. The next action is an
+authorized **local-only** Supabase start/reset/lint/pgTAP run. Do not link a
+project during that action.
+
 Do not begin external setup until the operator supplies or authorizes:
 
 - Supabase staging project or permission to create one;
 - chosen region and data-residency preference;
 - owner authentication method;
 - approved secret storage for local worker/n8n;
-- permission to install/link the Supabase CLI if not available;
+- permission to install and run the Supabase CLI plus a Docker-compatible local
+  runtime; project linking is a later, separate authorization;
 - confirmation that only synthetic/test data is used until RLS tests pass.
 
-Once authorized, Codex should implement in this exact order:
+Milestone 1 continues in this exact order:
 
-1. Add local Supabase scaffold and migration-test scripts without connecting the PWA.
-2. Implement tenant, inventory, campaign, asset, and rights schema.
-3. Implement content/review/job/audit schema and database invariants.
-4. Implement RLS and storage policy matrix; prove negative cases first.
+1. [x] Add local Supabase scaffold and migration-test scripts without connecting the PWA.
+2. [ ] Parse and test the authored tenant, inventory, campaign, asset, and rights schema locally.
+3. [ ] Parse and test the authored content/review/job/audit schema and database invariants locally.
+4. [ ] Execute the RLS and storage policy matrix locally; prove negative cases first.
 5. Generate shared types/contracts and add CI drift gates.
 6. Add browser auth and remote repository behind the default-off flag.
 7. Implement explicit idempotent sync with a dry-run summary.
@@ -1694,6 +1702,24 @@ The full program is complete only when:
 - Full Edge browser E2E passed.
 - No database, credentials, model download, Docker service, external publisher, or production state was enabled.
 
+### 2026-07-22 - Milestone 1 local scaffold hardening (NOT APPLIED)
+
+- Completed M1.1 locally with `config.toml`, deterministic synthetic `seed.sql`,
+  and a 17-assertion pgTAP smoke plan.
+- Audited Claude's 12 migrations before first apply and repaired tenant-boundary,
+  flagship scheduling, approval fingerprint, immutable-source, storage-role, and
+  `SECURITY DEFINER` privilege gaps.
+- Added 17 same-organization relationship constraints and a join-table tenant guard.
+- Aligned approval/publish database states with versioned JSON contracts.
+- Strengthened `verify:migrations` from presence checks to semantic negative
+  assertions for RLS, storage, RPC grants, tenant keys, invariants, and contract drift.
+- `npm run test:milestone1` passes unit, foundation, six worker tests, and migration checks.
+- Supabase CLI, PostgreSQL, and a container runtime are absent; SQL parsing,
+  pgTAP execution, and live RLS/storage behavior remain unverified and gated.
+- No credentials, CLI link, database connection, PWA remote connection, model,
+  GPU inference, publisher, or production state was enabled.
+
 ### Next entry
 
-Add an execution-log entry only after Milestone 1 is authorized and its acceptance evidence is complete.
+After explicit CLI/container authorization, record the first local reset, database
+lint, pgTAP, and RLS-negative evidence. Do not link staging in that same step.

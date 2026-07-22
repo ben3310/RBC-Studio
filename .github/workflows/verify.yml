@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  milestone-0:
+  local-foundation:
     runs-on: windows-latest
     timeout-minutes: 20
     steps:
@@ -23,8 +23,7 @@ jobs:
       - run: npm ci
       - run: python -m pip install -e "services/gpu-worker[dev]"
       - run: npm run verify:config
-      - run: npm run verify:migrations
-      - run: npm run test:milestone0
+      - run: npm run test:milestone1
       - run: python -m ruff check services/gpu-worker
       - run: npm run fixtures:contracts
       - name: Contract fixtures remain reproducible
