@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "id": "visual-maison-feed",
+  "factory_run_id": "run-fixture-004",
+  "campaign_id": "campaign-fixture-004",
+  "content_type": "visual",
+  "destination": "flagship",
+  "platform": "instagram",
+  "template_id": "maison",
+  "format": "feed",
+  "variant_seed": "campaign-fixture-004:maison:feed:0",
+  "copy_text": "archive no. 004",
+  "cta_type": "dm",
+  "synthetic_media": false,
+  "disclosure_text": "",
+  "status": "review",
+  "manual_only": true,
+  "binary_fingerprint": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "copy_fingerprint": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+}

@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RBC Studio</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RBC Studio">
+<meta name="theme-color" content="#26251F">
+<meta name="description" content="RareBagClub's local-first campaign studio for Instagram, TikTok, Telegram, Threads and X.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta property="og:title" content="RBC Studio">
+<meta property="og:description" content="RareBagClub's local-first campaign studio for Instagram, TikTok, Telegram, Threads and X.">
+<meta property="og:image" content="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/studio.css">
+</head>
+<body>
+
+<header>
+  <div class="wordmark">RBC <span>STUDIO</span></div>
+  <div class="tag">one piece · five channels · one campaign</div>
+  <div class="tag" style="margin-top:4px; color:var(--gold);"><span id="appVersion"></span> · campaign studio</div>
+  <button class="header-action" id="campaignLibraryButton" type="button" aria-expanded="false" aria-controls="campaignLibrary">Campaigns</button>
+  <div class="goldline"></div>
+</header>
+
+<button id="updateAvailable" class="update-pill" type="button" hidden>New version available · refresh</button>
+
+<div class="pulse" aria-label="Campaign readiness">
+  <span>Campaign pulse</span>
+  <div class="pulse-track"><div class="pulse-fill" id="pulseFill"></div></div>
+  <span id="pulseText">0 / 5 ready</span>
+</div>
+<div class="readiness-chips" id="readinessChips" aria-label="Campaign checklist">
+  <button type="button" class="chip" data-chip-target="brief">Brief ✗</button>
+  <button type="button" class="chip" data-chip-target="imagesPanel">Images ✗</button>
+  <button type="button" class="chip" data-chip-target="stage">Visual ✗</button>
+  <button type="button" class="chip" data-chip-target="channels">Pack 0/5</button>
+  <button type="button" class="chip" data-chip-target="queue">Scheduled ✗</button>
+</div>
+
+<nav class="campaign-nav" aria-label="Campaign sections">
+  <a href="#brief">Brief</a>
+  <a href="#visual">Visual</a>
+  <a href="#channels">Channel pack</a>
+  <a href="#factory">Factory</a>
+  <a href="#queue">Queue</a>
+</nav>
+
+<section id="campaignLibrary" class="library-panel" hidden aria-labelledby="campaignLibraryTitle">
+  <div class="library-head">
+    <div><div class="kicker">Campaign library</div><h2 id="campaignLibraryTitle">Your archive desk</h2></div>
+    <button class="btn ghost small" id="closeLibrary" type="button">Close</button>
+  </div>
+  <div class="library-actions"><button class="btn gold" id="newCampaign" type="button">New campaign</button></div>
+  <div id="campaignList" class="campaign-list"></div>
+
+  <details class="desk-record">
+    <summary>Desk record · which hooks are actually winning</summary>
+    <div class="desk-record-body">
+      <p class="hint">Ranked by DMs, then saves, from the results logged in every campaign's queue. Empty until results are entered.</p>
+      <div class="field" style="max-width:260px;">
+        <label for="leaderboardRegion">Region</label>
+        <select id="leaderboardRegion" style="width:100%; padding:9px 10px; border:1px solid var(--line); background:#fff; font-family:inherit; font-size:13px;">
+          <option value="all" selected>All regions</option>
+          <option value="americas">Americas</option>
+          <option value="europe">Europe</option>
+          <option value="auNz">AU/NZ</option>
+        </select>
+      </div>
+      <div id="leaderboardBody"></div>
+    </div>
+  </details>
+
+  <details class="desk-record">
+    <summary>Desk review · the monthly retro</summary>
+    <div class="desk-record-body">
+      <p class="hint">One card per month with campaigns, computed from the queue results and sold pieces. Months with nothing logged don't appear.</p>
+      <div id="deskReviewBody"></div>
+    </div>
+  </details>
+</section>
+
+<main class="app-shell">
+<section id="brief" class="section-anchor">
+  <div class="section-intro">
+    <div class="kicker">Campaign desk</div>
+    <h1>One archive record.<br><i>Every channel ready.</i></h1>
+    <p>Enter the facts once. RBC Studio shapes the visual, copy, video direction and publishing queue without inventing provenance or false urgency.</p>
+  </div>
+  <div class="panel" id="briefPanel">
+    <h2>01 · Campaign brief</h2>
+    <button type="button" class="summary-chip" id="briefSummaryChip" aria-controls="briefBody" aria-expanded="false"><span class="summary-chip-text" id="briefSummaryText"></span><span class="summary-chip-cta">edit</span></button>
+    <div class="collapsible-body" id="briefBody">
+    <div class="brief-grid">
+      <div class="field">
+        <label for="campaignObjective">Primary objective</label>
+        <select id="campaignObjective">
+          <option value="acquire">Acquire via DM</option>
+          <option value="drop">Announce archive drop</option>
+          <option value="educate">Educate collectors</option>
+          <option value="profile">Drive profile visits</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="storyAngle">Lead story</label>
+        <select id="storyAngle">
+          <option value="provenance">Provenance first</option>
+          <option value="detail">Collector detail</option>
+          <option value="styling">Styling point of view</option>
+          <option value="rarity">Archive rarity</option>
+        </select>
+      </div>
+      <div class="field"><label for="campaignDate">Campaign date</label><input type="date" id="campaignDate"></div>
+      <div class="field"><label for="copySpelling">Copy spelling</label>
+        <select id="copySpelling">
+          <option value="american" selected>American</option>
+          <option value="british">British</option>
+        </select>
+      </div>
+      <div class="field"><label for="acquisitionRoute">Acquisition route</label><input type="text" id="acquisitionRoute" value="DM @rarebagclub to acquire"></div>
+      <div class="field span-2"><label for="productUrl">Product or archive URL (optional)</label><input type="url" id="productUrl" placeholder="https://rarebagclub.com/..."></div>
+      <div class="field"><label for="fMaterial">Material and colour</label><input type="text" id="fMaterial" value="black leather · silver-tone hardware"></div>
+      <div class="field"><label for="fCondition">Condition note</label><input type="text" id="fCondition" value="excellent vintage condition"></div>
+      <div class="field"><label for="fAuth">Authentication</label><input type="text" id="fAuth" value="two-stage authenticated"></div>
+      <div class="field"><label for="fDetail">Defining collector detail</label><input type="text" id="fDetail" value="original chain and era-correct hardware"></div>
+      <div class="field"><label for="fShipping">Shipping (optional)</label><input type="text" id="fShipping" placeholder="insured worldwide courier, fully tracked"></div>
+      <div class="field"><label for="fDuties">Duties (optional)</label><input type="text" id="fDuties" placeholder="import duties are the collector's responsibility"></div>
+      <div class="field"><label for="fGuarantee">Guarantee (optional)</label><input type="text" id="fGuarantee" placeholder="authentication documented before dispatch"></div>
+      <div class="field"><label for="fDispatch">Dispatch window (optional)</label><input type="text" id="fDispatch" placeholder="2 business days"></div>
+      <div class="field span-2">
+        <div class="choice-row">
+          <label><input type="checkbox" id="includeName"> Use full product name in public copy</label>
+          <label><input type="checkbox" id="includeTags" checked> Include restrained discovery tags</label>
+        </div>
+      </div>
+    </div>
+    <div class="brief-note">Only enter claims you can document. Blank details are omitted from generated copy. Campaign text and images autosave locally. <span id="imageStorageHint"></span></div>
+    <div class="hint" id="completenessHint"></div>
+    </div>
+  </div>
+</section>
+
+<section id="visual" class="studio-core section-anchor">
+  <div class="section-intro">
+    <div class="kicker">Visual studio</div>
+    <h2>Twelve treatments.<br><i>One visual system.</i></h2>
+  </div>
+
+<div class="studio-grid">
+<div class="studio-left">
+<div class="panel" id="imagesPanel">
+  <h2>02 · Images</h2>
+  <button type="button" class="summary-chip" id="imagesSummaryChip" aria-controls="imagesBody" aria-expanded="false"><span class="summary-chip-text" id="imagesSummaryText"></span><span class="summary-chip-cta">edit</span></button>
+  <div class="collapsible-body" id="imagesBody">
+  <label class="btn" for="moodIn">Mood images</label>
+  <span class="count" id="moodCount">0</span>
+  &nbsp;&nbsp;
+  <label class="btn" for="bagIn">Bag cutout</label>
+  <span class="count" id="bagCount">None</span>
+  <input type="file" id="moodIn" accept="image/*" multiple>
+  <input type="file" id="bagIn" accept="image/*">
+  <div class="field" style="margin-top:10px;">
+    <label>Grid layout (auto adapts to image count · override here)</label>
+    <select id="gridMode" style="width:100%; padding:9px 10px; border:1px solid var(--line); background:#fff; font-family:inherit; font-size:13px;">
+      <option value="auto" selected>Auto · match image count</option>
+      <option value="1">Full bleed · 1 image</option>
+      <option value="2">Duo · 2 columns</option>
+      <option value="3">Feature · 1 large + 2 stacked</option>
+      <option value="4">Quad · 2×2</option>
+      <option value="5">Five · 3+2 columns</option>
+      <option value="6">Six · 2×3</option>
+    </select>
+  </div>
+  <div class="hint">Pinterest images: 1–6, one color story. If you pick a layout larger than your image count, images repeat to fill. No empty cells. Bag: press-and-hold in Photos → Share → Save Image.</div>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>03 · The piece</h2>
+  <div class="row2">
+    <div class="field"><label>No.</label><input type="text" id="fNo" value="004"></div>
+    <div class="field"><label>Accent</label><div class="swatches" id="swatches"></div></div>
+  </div>
+  <div class="field"><label>Bag name</label><input type="text" id="fName" value="Dior Hardcore Pouch"><div class="hint">Goes on the image, not the caption.</div></div>
+  <div class="field"><label>Title</label>
+    <div style="display:flex; gap:8px;">
+      <input type="text" id="fHook" value="the loud one" style="flex:1;">
+      <button class="btn" id="genTitle" type="button" style="white-space:nowrap;">⚡ title</button>
+    </div>
+    <div class="hint">2–4 words on the image, e.g. "the loud one".</div>
+  </div>
+  <div class="field"><label>Provenance</label><input type="text" id="fProv" value="Galliano era · c. 2003 · authenticated"><div class="hint">The lowballer filter.</div></div>
+  <div class="row2">
+    <div class="field"><label>Price</label>
+      <div style="display:flex; gap:8px;">
+        <select id="priceCurrency" style="width:98px; padding:9px 10px; border:1px solid var(--line); background:#fff; font-family:inherit; font-size:13px;">
+          <option value="USD" selected>USD</option>
+          <option value="EUR">EUR</option>
+          <option value="GBP">GBP</option>
+          <option value="CAD">CAD</option>
+          <option value="AUD">AUD</option>
+          <option value="NZD">NZD</option>
+          <option value="BND">BND (B$)</option>
+          <option value="POA">POA</option>
+        </select>
+        <input type="text" id="fPrice" placeholder="4,800" style="flex:1;">
+      </div>
+    </div>
+    <div class="field"><label>Call to action</label><input type="text" id="fCta" value="DM to claim"></div>
+  </div>
+  <div class="field"><label>Bag size</label>
+    <div class="slider-row"><input type="range" id="bagSize" min="28" max="95" value="60"></div>
+  </div>
+  <div class="togglerow"><input type="checkbox" id="soldToggle"><label for="soldToggle">SOLD stamp</label></div>
+  <div class="sold-story-card" id="soldStoryCard" hidden>
+    <p>the piece is acquired. generate the sold story?</p>
+    <div class="field"><label for="soldRegion">Buyer region (optional, continent-level only)</label>
+      <select id="soldRegion" style="width:100%; padding:9px 10px; border:1px solid var(--line); background:#fff; font-family:inherit; font-size:13px;">
+        <option value="" selected>Prefer not to say</option>
+        <option value="americas">Americas</option>
+        <option value="europe">Europe</option>
+        <option value="apac">Asia-Pacific</option>
+      </select>
+    </div>
+    <button class="btn small" id="genSoldStory" type="button">Generate sold story</button>
+    <div id="soldStoryOutputs" hidden>
+      <div class="dm-script"><div class="dm-script-head"><span>Instagram caption</span><button class="btn small" data-sold-copy="instagramCaption">Copy</button></div><textarea id="soldInstagram" readonly></textarea></div>
+      <div class="dm-script"><div class="dm-script-head"><span>Story line</span><button class="btn small" data-sold-copy="storyLine">Copy</button></div><textarea id="soldStoryLine" readonly></textarea></div>
+      <div class="dm-script"><div class="dm-script-head"><span>Telegram line</span><button class="btn small" data-sold-copy="telegramLine">Copy</button></div><textarea id="soldTelegram" readonly></textarea></div>
+    </div>
+  </div>
+  <div class="togglerow"><input type="checkbox" id="tagToggle" checked><label for="tagToggle">Lot tag · same size and spot on every template, grid-readable price</label></div>
+</div>
+</div>
+
+<div class="studio-right">
+<div class="panel">
+  <h2>04 · Proof strip · tap a treatment</h2>
+  <div class="proof" id="proof"></div>
+</div>
+
+<div class="stage-hint">↓ drag to position ↓</div>
+<div style="text-align:center; margin-bottom:8px;">
+  <button class="btn" id="modeBag" style="padding:7px 14px;">Drag: bag</button>
+  <button class="btn" id="modeText" style="padding:7px 14px; background:transparent; color:var(--ink); border:1px solid var(--ink);">Drag: text</button>
+  <button class="text-link" id="resetLayout" type="button" style="margin-left:10px;" hidden>reset layout</button>
+</div>
+<div class="stage-hint" id="dragHint" style="margin-top:-2px;" hidden>9:16 · tap a text block to select, then drag · type <b>|</b> in a field to force a line break · hold alt to drag free</div>
+<div style="text-align:center; margin-bottom:8px;">
+  <button class="btn" id="fmtFeed" style="padding:7px 14px;">Feed 4:5</button>
+  <button class="btn" id="fmtReel" style="padding:7px 14px; background:transparent; color:var(--ink); border:1px solid var(--ink);">Reel · Story 9:16</button>
+  <label style="font-size:11px; margin-left:10px;"><input type="checkbox" id="guideToggle"> safe guide</label>
+  <label style="font-size:11px; margin-left:10px;"><input type="checkbox" id="snapToggle" checked> snap</label>
+  <label style="font-size:11px; margin-left:10px;"><input type="checkbox" id="phoneScaleToggle"> phone-scale preview</label>
+</div>
+<div class="stage-wrap">
+<canvas id="stage" width="1080" height="1350" tabindex="0" role="img" aria-label="Collage template, feed format. Use arrow keys to move the bag. Hold Shift for larger movement."></canvas>
+<div id="emptyState" class="empty-state" hidden>
+  <div class="empty-state-card">
+    <p>1 add the bag photo · 2 pick a treatment · 3 generate the pack</p>
+    <button type="button" class="text-link" id="loadExample">load example campaign</button>
+  </div>
+</div>
+</div>
+<div id="canvasLive" class="visually-hidden" aria-live="polite"></div>
+
+<div class="panel" style="text-align:center; margin-top:12px;">
+  <button class="btn gold" id="exportBtn">Export 9:16 visual</button>
+</div>
+
+<div id="result-wrap" class="panel">
+  <h2>05 · Save visual</h2>
+  <img id="resultImg" alt="final">
+  <div class="save-hint">Press and hold to save, or use the PNG button.</div>
+  <a class="btn gold" id="downloadPng" download="rbc-campaign-visual.png">Save PNG</a>
+</div>
+</div>
+</div>
+
+<div class="panel">
+  <h2>06 · Instagram hook lab</h2>
+  <div class="field">
+    <label>Caption hook · pick the signal, ⚡ writes it as line one</label>
+    <div style="display:flex; gap:8px;">
+      <select id="hookStrat" style="flex:1; padding:9px 10px; border:1px solid var(--line); background:#fff; font-family:inherit; font-size:13px;">
+        <option value="saves" selected>Insider / gatekeep → SAVES (3x weight)</option>
+        <option value="sends">Send-to-a-friend → DM SHARES (5x weight)</option>
+        <option value="comments">Question / hot take → COMMENTS</option>
+        <option value="retention">List / reveal → RETENTION (carousels)</option>
+        <option value="aspiration">Aspiration / flex → PROFILE VISITS</option>
+        <option value="scarcity">Scarcity / FOMO → URGENCY DMs</option>
+      </select>
+      <button class="btn gold" id="genCapHook" type="button" style="white-space:nowrap;">⚡ hook</button>
+    </div>
+  </div>
+  <textarea id="caption"></textarea>
+  <div class="channel-meta" style="justify-content:flex-end;"><span id="captionCount">0/2,200</span></div>
+  <div style="text-align:center; margin-top:10px;">
+    <button class="btn" id="copyBtn">Copy caption</button>
+    <button class="btn" id="newOpener" style="background:transparent; color:var(--ink); border:1px solid var(--ink);">↻ new opener</button>
+    <button class="btn" id="genRestrainedHook" type="button" style="background:transparent; color:var(--ink); border:1px solid var(--ink);">restrained tone</button>
+  </div>
+  <div class="hint">Use this to audition a first line. Generate the complete five-channel pack below when the product facts and visual are ready.</div>
+</div>
+</section>
+
+<section id="channels" class="section-anchor">
+  <div class="section-intro">
+    <div class="kicker">Channel pack</div>
+    <h2>Native to each feed.<br><i>Faithful to one record.</i></h2>
+    <p>Generate once, then edit freely. Each channel gets its own structure, pacing and call to action while sharing the same verified product facts.</p>
+  </div>
+  <div class="channel-toolbar">
+    <div class="platform-tabs" role="tablist" aria-label="Social platforms">
+      <button class="platform-tab active" data-platform-tab="instagram" role="tab" aria-selected="true">Instagram</button>
+      <button class="platform-tab" data-platform-tab="tiktok" role="tab" aria-selected="false">TikTok</button>
+      <button class="platform-tab" data-platform-tab="telegram" role="tab" aria-selected="false">Telegram</button>
+      <button class="platform-tab" data-platform-tab="threads" role="tab" aria-selected="false">Threads</button>
+      <button class="platform-tab" data-platform-tab="x" role="tab" aria-selected="false">X</button>
+    </div>
+    <label class="ready-label" style="margin-right:4px;" title="Starts each hook bank from whichever line has the most DMs on record, once results have been logged."><input type="checkbox" id="provenFirst"> Proven first</label>
+    <button class="btn gold" id="generatePack">Generate five-channel pack</button>
+  </div>
+
+  <details class="ai-settings">
+    <summary>Optional AI polish</summary>
+    <div class="ai-settings-body">
+      <label class="ready-label"><input type="checkbox" id="aiEnabled"> Enable per-channel AI polish</label>
+      <label for="aiKey">Anthropic API key · stored only in this browser</label>
+      <div class="inline-controls"><input type="password" id="aiKey" autocomplete="off" placeholder="sk-ant-..."><button class="btn small" id="saveAiKey" type="button">Save key</button><button class="btn small ghost" id="removeAiKey" type="button">Remove</button></div>
+      <div class="hint">Optional and off by default. Core generation never makes a network request.</div>
+      <div id="aiStatus" class="inline-status" role="status"></div>
+    </div>
+  </details>
+  <div class="channel-grid">
+    <article class="channel-card active" data-platform="instagram">
+      <div class="channel-head"><div><div class="channel-name">Instagram</div><div class="channel-purpose">Catalog note · saves · acquisition</div></div><label class="ready-label"><input type="checkbox" class="ready-check" data-ready="instagram"> Ready</label></div>
+      <label class="visually-hidden" for="outInstagram">Instagram caption</label>
+      <textarea id="outInstagram" data-output="instagram"></textarea>
+      <div class="channel-meta"><span id="countInstagram">0 characters</span><span>2,200 max</span></div>
+      <div class="channel-actions"><button class="btn small" data-copy="outInstagram">Copy Instagram</button><button class="btn small ghost" data-regenerate="instagram">Regenerate</button><button class="btn small ghost ai-polish" data-ai="instagram" type="button" hidden>Polish with AI</button></div>
+    </article>
+    <article class="channel-card" data-platform="tiktok">
+      <div class="channel-head"><div><div class="channel-name">TikTok</div><div class="channel-purpose">Hook · shot plan · voiceover</div></div><label class="ready-label"><input type="checkbox" class="ready-check" data-ready="tiktok"> Ready</label></div>
+      <div class="field" style="margin-bottom:8px;">
+        <label for="tiktokHookStrat" style="font-size:12px;">On-screen hook signal</label>
+        <div style="display:flex; gap:8px;">
+          <select id="tiktokHookStrat" style="flex:1; padding:7px 8px; border:1px solid var(--line); background:#fff; font-family:inherit; font-size:12px;">
+            <option value="saves" selected>Insider / gatekeep → SAVES</option>
+            <option value="sends">Send-to-a-friend → SHARES</option>
+            <option value="comments">Question / hot take → COMMENTS</option>
+            <option value="retention">List / reveal → RETENTION</option>
+            <option value="aspiration">Aspiration / flex → PROFILE VISITS</option>
+            <option value="scarcity">Scarcity / FOMO → URGENCY</option>
+          </select>
+          <button class="btn small" id="genTiktokHook" type="button">⚡ hook</button>
+        </div>
+      </div>
+      <label class="visually-hidden" for="outTiktok">TikTok post and shot plan</label>
+      <textarea id="outTiktok" data-output="tiktok"></textarea>
+      <div class="channel-meta"><span id="countTiktok">0 characters</span><span>2,200 max · under 300 suggested</span></div>
+      <div class="channel-actions"><button class="btn small" data-copy="outTiktok">Copy TikTok</button><button class="btn small ghost" data-regenerate="tiktok">Regenerate</button><button class="btn small ghost ai-polish" data-ai="tiktok" type="button" hidden>Polish with AI</button></div>
+    </article>
+    <article class="channel-card" data-platform="telegram">
+      <div class="channel-head"><div><div class="channel-name">Telegram</div><div class="channel-purpose">High-information archive alert</div></div><label class="ready-label"><input type="checkbox" class="ready-check" data-ready="telegram"> Ready</label></div>
+      <label class="visually-hidden" for="outTelegram">Telegram post</label>
+      <textarea id="outTelegram" data-output="telegram"></textarea>
+      <div class="channel-meta"><span id="countTelegram">0 characters</span><span>1,024 photo-caption max</span></div>
+      <div class="channel-actions"><button class="btn small" data-copy="outTelegram">Copy Telegram</button><button class="btn small ghost" data-regenerate="telegram">Regenerate</button><button class="btn small ghost ai-polish" data-ai="telegram" type="button" hidden>Polish with AI</button></div>
+    </article>
+    <article class="channel-card" data-platform="threads">
+      <div class="channel-head"><div><div class="channel-name">Threads</div><div class="channel-purpose">Collector conversation · 3 posts</div></div><label class="ready-label"><input type="checkbox" class="ready-check" data-ready="threads"> Ready</label></div>
+      <label class="visually-hidden" for="outThreads">Threads post sequence</label>
+      <textarea id="outThreads" data-output="threads"></textarea>
+      <div class="channel-meta"><span id="countThreads">0 characters</span><span>500 per post</span></div>
+      <div class="channel-actions"><button class="btn small" data-copy="outThreads">Copy Threads</button><button class="btn small ghost" data-regenerate="threads">Regenerate</button><button class="btn small ghost ai-polish" data-ai="threads" type="button" hidden>Polish with AI</button></div>
+    </article>
+    <article class="channel-card" data-platform="x">
+      <div class="channel-head"><div><div class="channel-name">X</div><div class="channel-purpose">Compressed archive record · 2 posts</div></div><label class="ready-label"><input type="checkbox" class="ready-check" data-ready="x"> Ready</label></div>
+      <label class="visually-hidden" for="outX">X post sequence</label>
+      <textarea id="outX" data-output="x"></textarea>
+      <div class="channel-meta"><span id="countX">0 characters</span><span id="xLimit">280 per post</span></div>
+      <div class="channel-actions"><button class="btn small" data-copy="outX">Copy X</button><button class="btn small ghost" data-regenerate="x">Regenerate</button><button class="btn small ghost ai-polish" data-ai="x" type="button" hidden>Polish with AI</button></div>
+    </article>
+  </div>
+
+  <details class="dm-desk">
+    <summary>DM desk · the conversation where money changes hands</summary>
+    <div class="dm-desk-body">
+      <p class="hint">Scripts built from the same record. Not part of the 5-channel readiness meter — this is the operator's own reference, not something you post.</p>
+      <button class="btn small" id="genDm" type="button">Generate DM desk</button>
+      <div class="dm-script"><div class="dm-script-head"><span>Enquiry reply</span><button class="btn small" data-dm-copy="enquiry">Copy</button></div><textarea id="dmEnquiry" readonly></textarea></div>
+      <div class="dm-script"><div class="dm-script-head"><span>Provenance pack</span><button class="btn small" data-dm-copy="provenance">Copy</button></div><textarea id="dmProvenance" readonly></textarea></div>
+      <div class="dm-script"><div class="dm-script-head"><span>Shipping answer</span><button class="btn small" data-dm-copy="shipping">Copy</button></div><textarea id="dmShipping" readonly></textarea></div>
+      <div class="dm-script"><div class="dm-script-head"><span>Lowball defense · first</span><button class="btn small" data-dm-copy="lowballFirst">Copy</button></div><textarea id="dmLowballFirst" readonly></textarea></div>
+      <div class="dm-script"><div class="dm-script-head"><span>Lowball defense · second</span><button class="btn small" data-dm-copy="lowballSecond">Copy</button></div><textarea id="dmLowballSecond" readonly></textarea></div>
+      <div class="dm-script"><div class="dm-script-head"><span>Lowball defense · third</span><button class="btn small" data-dm-copy="lowballThird">Copy</button></div><textarea id="dmLowballThird" readonly></textarea></div>
+      <div class="dm-script"><div class="dm-script-head"><span>The close</span><button class="btn small" data-dm-copy="close">Copy</button></div><textarea id="dmClose" readonly></textarea></div>
+      <div class="dm-script"><div class="dm-script-head"><span class="dm-warning">Second-collector note · send only if true</span><button class="btn small" data-dm-copy="secondCollector">Copy</button></div><textarea id="dmSecondCollector" readonly></textarea></div>
+      <div class="dm-script"><div class="dm-script-head"><label style="font-size:12px; display:flex; gap:6px; align-items:center;"><input type="checkbox" id="dmTimezoneEnabled"> Time-zone courtesy line</label><button class="btn small" data-dm-copy="timezone">Copy</button></div><textarea id="dmTimezone" readonly></textarea></div>
+    </div>
+  </details>
+</section>
+
+<section id="factory" class="section-anchor factory-section">
+  <div class="section-intro">
+    <div class="kicker">Content factory</div>
+    <h2>One record.<br><i>Thirty-one governed assets.</i></h2>
+    <p>Render every template in feed and reel formats, add six Pinterest discovery pins and one fact-only archive article, then review each destination before export.</p>
+  </div>
+  <div class="panel" id="factoryPanel">
+    <div class="factory-policy"><strong>Flagship lock</strong><span>Rare Bag Club is always manual. Batch approval never touches Maison or Editorial flagship assets.</span></div>
+    <div class="factory-controls">
+      <label>Source rights
+        <select id="factorySourceClass">
+          <option value="owned">Owned photography</option>
+          <option value="licensed">Licensed imagery</option>
+          <option value="generated">Generated mood asset · product remains real</option>
+        </select>
+      </label>
+      <label>License / source reference
+        <input id="factoryLicenseRef" type="text" placeholder="Receipt, shoot ID, or source note">
+      </label>
+      <label>Private cutout endpoint · optional
+        <input id="factoryCutoutEndpoint" type="url" placeholder="http://127.0.0.1:8000/cutout">
+      </label>
+    </div>
+    <label class="factory-rights"><input id="factoryRightsConfirmed" type="checkbox"> I confirm these source images are cleared for this campaign.</label>
+    <div class="factory-toolbar">
+      <button class="btn ghost" id="factoryCutout" type="button">Cutout assist</button>
+      <button class="btn gold" id="factoryGenerate" type="button">Generate 31 assets</button>
+      <button class="btn ghost" id="factoryApproveSatellites" type="button">Approve satellites</button>
+      <button class="btn ghost" id="factoryRejectDrafts" type="button">Reject drafts</button>
+      <button class="btn" id="factoryExport" type="button">Export approved ZIP</button>
+    </div>
+    <p class="hint">Without an endpoint, cutout assist removes a uniform plain background locally. With an endpoint, the product image is sent only to the URL you enter.</p>
+    <div class="factory-runline"><div id="factoryProgress" class="factory-progress" role="progressbar" aria-label="Factory generation" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="factoryProgressBar"></span></div><span id="factoryCount">0 assets</span></div>
+    <div class="factory-status-row"><p id="factoryStatus" class="inline-status" aria-live="polite">Rights-gated · local-first · no credentials stored.</p><div id="factoryPalette" class="factory-palette" aria-label="Product palette"></div></div>
+    <div id="factoryQueue" class="factory-queue"></div>
+  </div>
+</section>
+
+<section id="queue" class="section-anchor" style="margin-top:36px;">
+  <div class="section-intro">
+    <div class="kicker">Publishing queue</div>
+    <h2>A clear sequence.<br><i>No daily scramble.</i></h2>
+    <p>The times are editable workflow defaults. Adjust them to your audience data, then mark each channel ready above.</p>
+  </div>
+  <div class="panel">
+    <h2>Arc · tease → reveal → proof</h2>
+    <p class="hint">The reveal is the five-channel pack above and tracks the campaign date. Tease and proof are optional acts around it — each gets its own visual and caption.</p>
+    <div class="arc-strip">
+      <div class="arc-stage">
+        <div class="arc-stage-head"><span>Tease · T-1</span><span class="status-dot" id="arcDotTease"></span></div>
+        <input type="date" id="arcTeaseDate">
+        <input type="time" id="arcTeaseTime" value="08:00">
+        <button class="btn small" id="genTease" type="button">Generate tease</button>
+      </div>
+      <div class="arc-stage">
+        <div class="arc-stage-head"><span>Reveal</span></div>
+        <p class="hint">Same date as the campaign brief. Tracked by the pulse above.</p>
+      </div>
+      <div class="arc-stage">
+        <div class="arc-stage-head"><span>Proof · T+1</span><span class="status-dot" id="arcDotProof"></span></div>
+        <input type="date" id="arcProofDate">
+        <input type="time" id="arcProofTime" value="09:00">
+        <button class="btn small" id="genProof" type="button">Generate proof</button>
+      </div>
+    </div>
+    <div class="dm-script" id="arcTeaseOutputs" hidden>
+      <div class="dm-script-head"><span>Tease caption</span><button class="btn small" data-arc-copy="tease">Copy</button></div>
+      <textarea id="arcTeaseCaption" readonly></textarea>
+    </div>
+    <div class="dm-script" id="arcProofOutputs" hidden>
+      <div class="dm-script-head"><span id="arcProofLabel">Proof caption</span><button class="btn small" data-arc-copy="proof">Copy</button></div>
+      <textarea id="arcProofCaption" readonly></textarea>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="field" style="margin-bottom:12px;">
+      <label for="targetRegion">Buyer region · sets suggested times and the dual clock below</label>
+      <div style="display:flex; gap:8px;">
+        <select id="targetRegion" style="flex:1; padding:9px 10px; border:1px solid var(--line); background:#fff; font-family:inherit; font-size:13px;">
+          <option value="americas" selected>Americas (ET)</option>
+          <option value="europe">Europe (CET)</option>
+          <option value="auNz">AU/NZ (AEST)</option>
+          <option value="sun">Follow the sun (two-wave)</option>
+        </select>
+        <button class="btn" id="suggestTimes" type="button" style="white-space:nowrap;">suggest times</button>
+      </div>
+    </div>
+    <div class="queue-scroll">
+    <table class="queue">
+      <thead><tr><th>Channel</th><th>Role</th><th>Time</th><th>Status</th><th>Results</th></tr></thead>
+      <tbody>
+        <tr data-queue="telegram" tabindex="0" role="button" aria-label="telegram posting task"><td>Telegram</td><td>Collector first look</td><td><input class="queue-time" type="time" id="timeTelegram" value="10:00"><div class="hint" id="clockTelegram"></div></td><td><span class="status-dot"></span><span class="queue-status">Draft</span></td><td class="results-cell"><input type="number" min="0" class="result-input" id="viewsTelegram" placeholder="views" title="views"><input type="number" min="0" class="result-input" id="savesTelegram" placeholder="saves" title="saves"><input type="number" min="0" class="result-input" id="dmsTelegram" placeholder="dms" title="dms"></td></tr>
+        <tr data-queue="instagram" tabindex="0" role="button" aria-label="instagram posting task"><td>Instagram</td><td>Hero reveal</td><td><input class="queue-time" type="time" id="timeInstagram" value="12:30"><div class="hint" id="clockInstagram"></div></td><td><span class="status-dot"></span><span class="queue-status">Draft</span></td><td class="results-cell"><input type="number" min="0" class="result-input" id="viewsInstagram" placeholder="views" title="views"><input type="number" min="0" class="result-input" id="savesInstagram" placeholder="saves" title="saves"><input type="number" min="0" class="result-input" id="dmsInstagram" placeholder="dms" title="dms"></td></tr>
+        <tr data-queue="tiktok" tabindex="0" role="button" aria-label="tiktok posting task"><td>TikTok</td><td>Detail story</td><td><input class="queue-time" type="time" id="timeTiktok" value="15:00"><div class="hint" id="clockTiktok"></div></td><td><span class="status-dot"></span><span class="queue-status">Draft</span></td><td class="results-cell"><input type="number" min="0" class="result-input" id="viewsTiktok" placeholder="views" title="views"><input type="number" min="0" class="result-input" id="savesTiktok" placeholder="saves" title="saves"><input type="number" min="0" class="result-input" id="dmsTiktok" placeholder="dms" title="dms"></td></tr>
+        <tr data-queue="threads" tabindex="0" role="button" aria-label="threads posting task"><td>Threads</td><td>Collector question</td><td><input class="queue-time" type="time" id="timeThreads" value="18:00"><div class="hint" id="clockThreads"></div></td><td><span class="status-dot"></span><span class="queue-status">Draft</span></td><td class="results-cell"><input type="number" min="0" class="result-input" id="viewsThreads" placeholder="views" title="views"><input type="number" min="0" class="result-input" id="savesThreads" placeholder="saves" title="saves"><input type="number" min="0" class="result-input" id="dmsThreads" placeholder="dms" title="dms"></td></tr>
+        <tr data-queue="x" tabindex="0" role="button" aria-label="x posting task"><td>X</td><td>Archive record</td><td><input class="queue-time" type="time" id="timeX" value="20:00"><div class="hint" id="clockX"></div></td><td><span class="status-dot"></span><span class="queue-status">Draft</span></td><td class="results-cell"><input type="number" min="0" class="result-input" id="viewsX" placeholder="views" title="views"><input type="number" min="0" class="result-input" id="savesX" placeholder="saves" title="saves"><input type="number" min="0" class="result-input" id="dmsX" placeholder="dms" title="dms"></td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="hint">Results · views · saves · dms — leave blank when unknown, never enter zero. Feeds the desk record leaderboard in the campaign library.</div>
+    <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:14px;flex-wrap:wrap;">
+      <span class="save-state" id="saveState">Saved locally</span><span id="exportProgress" class="inline-status" role="status"></span>
+      <div class="queue-tools"><button class="btn small ghost" id="exportReel" type="button">Reel video</button><button class="btn small ghost" id="exportCalendar" type="button">Calendar .ics</button><button class="btn small ghost" id="exportCopy" type="button">Export copy only</button><button class="text-link" id="resetCampaign" type="button">Reset this campaign</button></div>
+    </div>
+  </div>
+</section>
+</main>
+
+<div class="action-dock" aria-label="Campaign actions">
+  <button class="btn gold" id="dockGenerate">Generate pack</button>
+  <button class="btn" id="exportPack">Export ZIP pack</button>
+</div>
+
+<script type="module" src="js/app.js"></script>
+<div id="appLive" class="visually-hidden" aria-live="polite"></div>
+</body>
+</html>

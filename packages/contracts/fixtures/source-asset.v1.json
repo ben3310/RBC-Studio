@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "id": "asset-fixture-original",
+  "piece_id": "piece-fixture-004",
+  "campaign_id": "campaign-fixture-004",
+  "kind": "product_original",
+  "storage_key": "org-fixture/pieces/004/original/source.png",
+  "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "mime_type": "image/png",
+  "width": 2400,
+  "height": 3000,
+  "bytes": 1500000,
+  "parent_asset_id": null,
+  "rights_class": "owned",
+  "derivation": {}
+}

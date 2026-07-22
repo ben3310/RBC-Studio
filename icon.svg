@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#26251F"/>
+  <rect x="36" y="36" width="440" height="440" fill="none" stroke="#755f42" stroke-width="2"/>
+  <text x="256" y="245" fill="#F1ECE2" font-family="Georgia, serif" font-size="132" font-style="italic" text-anchor="middle">RBC</text>
+  <line x1="182" y1="280" x2="330" y2="280" stroke="#755f42" stroke-width="3"/>
+  <text x="256" y="336" fill="#F1ECE2" font-family="Arial, sans-serif" font-size="35" letter-spacing="13" text-anchor="middle">STUDIO</text>
+</svg>

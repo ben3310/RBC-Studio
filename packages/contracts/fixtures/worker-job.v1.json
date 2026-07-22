@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "job_id": "job-fixture-cutout",
+  "job_type": "cutout.v1",
+  "attempt": 1,
+  "lease_expires_at": "2026-07-19T00:10:00.000Z",
+  "input": {
+    "asset_id": "asset-fixture-original",
+    "download_url": "https://storage.example.test/signed/original",
+    "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "options": {"quality": "hero"}
+  },
+  "output_uploads": [
+    {"role": "cutout", "upload_url": "https://storage.example.test/signed/cutout"},
+    {"role": "mask", "upload_url": "https://storage.example.test/signed/mask"}
+  ],
+  "model_policy": {"purpose": "product_cutout", "allowed_revision": "benchmark-pending"}
+}

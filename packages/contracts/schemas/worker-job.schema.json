@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rarebagclub.local/contracts/worker-job.v1.schema.json",
+  "title": "RBC leased worker job",
+  "type": "object",
+  "required": ["schema_version", "job_id", "job_type", "attempt", "lease_expires_at", "input", "output_uploads", "model_policy"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "job_id": {"type": "string", "minLength": 1},
+    "job_type": {"type": "string", "pattern": "^[a-z_]+\\.v[0-9]+$"},
+    "attempt": {"type": "integer", "minimum": 1},
+    "lease_expires_at": {"type": "string", "format": "date-time"},
+    "input": {
+      "type": "object",
+      "required": ["asset_id", "download_url", "sha256", "options"],
+      "properties": {
+        "asset_id": {"type": "string", "minLength": 1},
+        "download_url": {"type": "string", "format": "uri"},
+        "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "options": {"type": "object"}
+      },
+      "additionalProperties": false
+    },
+    "output_uploads": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["role", "upload_url"],
+        "properties": {"role": {"type": "string", "minLength": 1}, "upload_url": {"type": "string", "format": "uri"}},
+        "additionalProperties": false
+      }
+    },
+    "model_policy": {
+      "type": "object",
+      "required": ["purpose", "allowed_revision"],
+      "properties": {"purpose": {"type": "string", "minLength": 1}, "allowed_revision": {"type": "string", "minLength": 1}},
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

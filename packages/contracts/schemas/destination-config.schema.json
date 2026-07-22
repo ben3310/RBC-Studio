@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rarebagclub.local/contracts/destination-config.v1.schema.json",
+  "title": "RBC destination configuration",
+  "type": "object",
+  "required": ["version", "destinations"],
+  "properties": {
+    "$schema": {"type": "string"},
+    "version": {"const": 1},
+    "destinations": {
+      "type": "object",
+      "required": ["flagship"],
+      "additionalProperties": {
+        "type": "object",
+        "required": ["label", "kind", "manualOnly", "requiresApproval", "disclosure"],
+        "properties": {
+          "label": {"type": "string", "minLength": 1},
+          "kind": {"enum": ["flagship", "satellite", "discovery", "owned"]},
+          "manualOnly": {"type": "boolean"},
+          "requiresApproval": {"type": "boolean"},
+          "disclosure": {"type": "string"}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

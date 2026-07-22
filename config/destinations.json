@@ -1,0 +1,48 @@
+{
+  "$schema": "../packages/contracts/schemas/destination-config.schema.json",
+  "version": 1,
+  "destinations": {
+    "flagship": {
+      "label": "Rare Bag Club",
+      "kind": "flagship",
+      "manualOnly": true,
+      "requiresApproval": true,
+      "disclosure": ""
+    },
+    "education": {
+      "label": "Archive Notes",
+      "kind": "satellite",
+      "manualOnly": false,
+      "requiresApproval": true,
+      "disclosure": "Curated by @rarebagclub"
+    },
+    "aesthetic": {
+      "label": "Object Study",
+      "kind": "satellite",
+      "manualOnly": false,
+      "requiresApproval": true,
+      "disclosure": "Curated by @rarebagclub"
+    },
+    "era": {
+      "label": "Era Index",
+      "kind": "satellite",
+      "manualOnly": false,
+      "requiresApproval": true,
+      "disclosure": "Curated by @rarebagclub"
+    },
+    "pinterest": {
+      "label": "Pinterest",
+      "kind": "discovery",
+      "manualOnly": false,
+      "requiresApproval": true,
+      "disclosure": "Curated by @rarebagclub"
+    },
+    "blog": {
+      "label": "Archive Journal",
+      "kind": "owned",
+      "manualOnly": false,
+      "requiresApproval": true,
+      "disclosure": "Published by Rare Bag Club"
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rarebagclub.local/contracts/content-item.v1.schema.json",
+  "title": "RBC governed content item",
+  "type": "object",
+  "required": ["schema_version", "id", "factory_run_id", "campaign_id", "content_type", "destination", "format", "status", "manual_only", "synthetic_media"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "id": {"type": "string", "minLength": 1},
+    "factory_run_id": {"type": "string", "minLength": 1},
+    "campaign_id": {"type": "string", "minLength": 1},
+    "content_type": {"enum": ["visual", "carousel", "pin", "reel", "story", "text", "blog", "email", "google_post"]},
+    "destination": {"type": "string", "minLength": 1},
+    "platform": {"type": ["string", "null"]},
+    "template_id": {"type": ["string", "null"]},
+    "format": {"type": "string", "minLength": 1},
+    "variant_seed": {"type": ["string", "null"]},
+    "copy_text": {"type": "string"},
+    "cta_type": {"type": ["string", "null"]},
+    "synthetic_media": {"type": "boolean"},
+    "disclosure_text": {"type": "string"},
+    "status": {"enum": ["draft", "rendered", "qa_failed", "review", "approved", "rejected", "scheduled", "publishing", "published", "failed", "superseded"]},
+    "manual_only": {"type": "boolean"},
+    "binary_fingerprint": {"type": ["string", "null"]},
+    "copy_fingerprint": {"type": ["string", "null"]}
+  },
+  "additionalProperties": false
+}

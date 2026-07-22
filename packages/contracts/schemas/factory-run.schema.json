@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rarebagclub.local/contracts/factory-run.v1.schema.json",
+  "title": "RBC factory run",
+  "type": "object",
+  "required": ["schema_version", "id", "campaign_id", "plan_version", "seed", "input_fingerprint", "status", "requested_by", "created_at"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "id": {"type": "string", "minLength": 1},
+    "campaign_id": {"type": "string", "minLength": 1},
+    "plan_version": {"type": "integer", "minimum": 1},
+    "seed": {"type": "string", "minLength": 1},
+    "input_fingerprint": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "status": {"enum": ["queued", "running", "review", "partial", "complete", "failed", "cancelled"]},
+    "requested_by": {"type": "string", "minLength": 1},
+    "created_at": {"type": "string", "format": "date-time"},
+    "started_at": {"type": ["string", "null"], "format": "date-time"},
+    "completed_at": {"type": ["string", "null"], "format": "date-time"}
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rarebagclub.local/contracts/publish-job.v1.schema.json",
+  "title": "RBC idempotent publish job",
+  "type": "object",
+  "required": ["schema_version", "id", "content_item_id", "account_id", "scheduled_for", "state", "idempotency_key", "attempt_count"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "id": {"type": "string", "minLength": 1},
+    "content_item_id": {"type": "string", "minLength": 1},
+    "account_id": {"type": "string", "minLength": 1},
+    "scheduled_for": {"type": "string", "format": "date-time"},
+    "state": {"enum": ["pending", "claimed", "uploading", "processing", "published", "retry_wait", "blocked", "failed", "cancelled"]},
+    "idempotency_key": {"type": "string", "minLength": 16},
+    "attempt_count": {"type": "integer", "minimum": 0},
+    "next_attempt_at": {"type": ["string", "null"], "format": "date-time"},
+    "last_error_code": {"type": ["string", "null"]},
+    "last_error_redacted": {"type": ["string", "null"]}
+  },
+  "additionalProperties": false
+}

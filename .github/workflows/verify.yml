@@ -1,0 +1,37 @@
+name: verify
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  milestone-0:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: npm ci
+      - run: python -m pip install -e "services/gpu-worker[dev]"
+      - run: npm run verify:config
+      - run: npm run verify:migrations
+      - run: npm run test:milestone0
+      - run: python -m ruff check services/gpu-worker
+      - run: npm run fixtures:contracts
+      - name: Contract fixtures remain reproducible
+        shell: pwsh
+        run: |
+          if (git status --porcelain -- packages/contracts/fixtures) {
+            git diff -- packages/contracts/fixtures
+            throw "Contract fixtures are stale. Run npm run fixtures:contracts."
+          }
+      - run: npm run test:e2e

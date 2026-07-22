@@ -1,0 +1,25 @@
+{
+  "name": "RBC Studio",
+  "short_name": "RBC Studio",
+  "description": "A local-first social campaign studio for the RareBagClub archive.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F1ECE2",
+  "theme_color": "#26251F",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

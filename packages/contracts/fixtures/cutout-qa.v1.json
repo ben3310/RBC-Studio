@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "asset_id": "asset-fixture-cutout",
+  "model_id": "noop-fixture",
+  "model_revision": "milestone-0",
+  "score": 0.5,
+  "decision": "manual_review",
+  "signals": [
+    {"name": "foreground_area", "value": 0.42, "passed": true, "note": "Fixture only; no learned inference ran."}
+  ],
+  "created_at": "2026-07-19T00:05:00.000Z"
+}

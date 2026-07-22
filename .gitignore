@@ -1,0 +1,38 @@
+node_modules/
+shots/
+/fixtures/
+
+# Secrets and local overrides
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+secrets/
+
+# Python environments and caches
+.venv/
+venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.py[cod]
+
+# Model weights and private/generated media
+models/
+model-cache/
+*.ckpt
+*.safetensors
+*.pth
+*.pt
+*.onnx
+storage/
+originals/
+derivatives/
+benchmark-private/
+
+# Local orchestration state and credential exports
+.n8n/
+workflows/n8n/credentials*.json
+supabase/.temp/

@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "id": "publish-fixture-pin",
+  "content_item_id": "pin-collage",
+  "account_id": "pinterest-fixture",
+  "scheduled_for": "2026-07-20T01:00:00.000Z",
+  "state": "pending",
+  "idempotency_key": "pinterest-fixture:pin-collage:v1",
+  "attempt_count": 0,
+  "next_attempt_at": null,
+  "last_error_code": null,
+  "last_error_redacted": null
+}
