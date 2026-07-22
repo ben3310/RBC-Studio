@@ -10,9 +10,11 @@
     "test:worker": "python -m pytest services/gpu-worker/tests",
     "test:milestone0": "npm run test && npm run test:foundation && npm run test:worker",
     "test:migrations": "node scripts/verify-migrations.mjs",
-    "test:milestone1": "npm run test:milestone0 && npm run test:migrations",
+    "test:remote": "node tests/remote.mjs",
+    "test:milestone1": "npm run test:milestone0 && npm run test:migrations && npm run verify:db-types && npm run test:remote",
     "verify:config": "node scripts/verify-config.mjs",
     "verify:migrations": "node scripts/verify-migrations.mjs",
+    "verify:db-types": "node scripts/verify-db-types.mjs",
     "fixtures:contracts": "node scripts/generate-contract-fixtures.mjs"
   },
   "devDependencies": {

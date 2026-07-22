@@ -1,0 +1,30 @@
+{
+  "note": "Drift guard (M1.7). The app's understanding of the applied schema. Regenerate intent when migrations change: keep `tables` equal to the migration set and `appReads` to columns the remote client depends on. Checked by scripts/verify-db-types.mjs.",
+  "generatedFrom": "infra/supabase/migrations",
+  "tables": [
+    "app_approvals",
+    "app_asset_attributes",
+    "app_audit_events",
+    "app_campaigns",
+    "app_content_item_assets",
+    "app_content_items",
+    "app_destinations",
+    "app_factory_runs",
+    "app_job_runs",
+    "app_metric_observations",
+    "app_model_registry",
+    "app_organization_members",
+    "app_organizations",
+    "app_pieces",
+    "app_publications",
+    "app_publish_jobs",
+    "app_rights_records",
+    "app_social_accounts",
+    "app_source_assets",
+    "app_webhook_events"
+  ],
+  "appReads": {
+    "app_content_items": ["id", "status", "destination_id", "platform", "content_type"]
+  },
+  "rpc": ["sync_local_campaign"]
+}
