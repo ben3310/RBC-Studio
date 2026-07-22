@@ -29,7 +29,8 @@ jobs:
       - name: Contract fixtures remain reproducible
         shell: pwsh
         run: |
-          if (git status --porcelain -- packages/contracts/fixtures) {
+          git diff --quiet --exit-code -- packages/contracts/fixtures
+          if ($LASTEXITCODE -ne 0) {
             git diff -- packages/contracts/fixtures
             throw "Contract fixtures are stale. Run npm run fixtures:contracts."
           }
