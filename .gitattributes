@@ -1,0 +1,2 @@
+# Benchmark fixtures are byte-addressed evidence. Never rewrite line endings.
+benchmarks/cutout/fixtures/*.pgm -text
