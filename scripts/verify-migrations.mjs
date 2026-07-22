@@ -55,9 +55,13 @@ assert.ok(sql.includes("kind <> 'flagship' or (manual_only = true and requires_a
   'flagship check constraint missing');
 assert.ok(sql.includes('protect_flagship'), 'flagship guard trigger missing');
 
-// literal-scarcity / POA price doctrine encoded on pieces
-assert.ok(sql.includes("price_mode = 'on_request' or price_amount_minor is not null"),
-  'POA price check missing');
+// literal-scarcity / POA price doctrine encoded on pieces: a price-on-request
+// piece must carry no amount (checked by intent, not exact phrasing, so schema
+// hardening does not break this gate)
+assert.ok(/price_mode\s*=\s*'on_request'/.test(sql) && /price_amount_minor is null/.test(sql),
+  'POA price check missing (on_request must forbid an amount)');
+assert.ok(/price_mode\s*=\s*'fixed'/.test(sql) && /price_amount_minor\s*>\s*0/.test(sql),
+  'fixed-price check missing (fixed must require a positive amount)');
 
 // audit append-only guard
 assert.ok(sql.includes('audit_is_append_only'), 'audit append-only trigger missing');
