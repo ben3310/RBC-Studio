@@ -1,22 +1,33 @@
 # Supabase scaffold (Milestone 1)
 
-This directory is the **local, not-yet-applied** database scaffold for the RBC
+This directory is the database scaffold for the RBC
 Content Factory. It corresponds to `CODEX_IMPLEMENTATION.md` §7 and M1.1 of the
 §28 work packet: local configuration, ordered migrations, synthetic seed data,
 and migration tests without connecting the PWA.
 
-## Status: NOT APPLIED
+## Status: STAGING REPORTED APPLIED; CORRECTED GATE RERUN PENDING
 
-Nothing here has been applied to any Supabase project. No secrets, CLI package,
-container runtime, CLI link, PWA connection, or remote database call was added.
+The Claude/operator handoff reports that these migrations were applied to staging
+and that nine RLS checks passed. This Codex track did not apply or query staging.
+No secret, pinned CLI package, local container runtime, or PWA connection was added.
 The app remains default-off (`parseRemoteFactoryConfig` → `mode: "local"`).
+
+Ignored files under `.temp/` contain the corresponding
+`linked-project.json`, `project-ref`, and pooler metadata timestamped 2026-07-22
+10:37 local time. Their values were not read or used by this track.
+
+The committed RLS test initially contained an invalid UUID, a missing required
+campaign, and the wrong JWT claim setting. It therefore could not reproduce the
+reported success verbatim. The checked-in test is now corrected and must pass
+again against staging before M1.5 is marked complete.
 
 Local scaffold files:
 
-- `config.toml`: secret-free, unlinked CLI configuration;
-- `migrations/`: the 12 ordered, not-yet-applied migrations;
+- `config.toml`: secret-free local configuration with no remote reference;
+- `migrations/`: the 12 ordered migrations reported applied to staging;
 - `seed.sql`: deterministic synthetic records only, with no Auth identities;
 - `tests/0001_schema.test.sql`: pgTAP smoke plan for the first authorized reset.
+- `tests/rls_negative_checks.sql`: transactional nine-case local RLS gate.
 
 ## What is verified offline
 
@@ -63,9 +74,10 @@ supabase db lint --level error
 supabase test db
 ```
 
-Those commands discover `infra/supabase/config.toml`. Never substitute
-`--linked` until the local reset, lint, pgTAP, and RLS negative suite pass and a
-staging apply is separately authorized.
+Those commands discover `infra/supabase/config.toml`. The explicit `--local` on
+reset is mandatory because ignored link metadata exists. Never use `--linked`,
+`db push`, `migration up`, or a default-remote command until the local reset,
+lint, pgTAP, and RLS negative suite pass and staging is separately authorized.
 
 ## Still deferred to the first authorized runtime
 
@@ -83,7 +95,6 @@ staging apply is separately authorized.
 
 ## Migration immutability
 
-These files may be repaired while status remains NOT APPLIED. After any shared
-staging or production apply, never edit an applied migration. Add a forward
-migration and documented repair path.
-
+Because staging is reported applied, never edit an applied migration. Add a
+forward migration and documented repair path for schema changes. Test-only
+repairs such as the corrected transactional RLS gate do not alter the schema.

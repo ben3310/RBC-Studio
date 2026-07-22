@@ -1714,10 +1714,16 @@ The full program is complete only when:
 - Strengthened `verify:migrations` from presence checks to semantic negative
   assertions for RLS, storage, RPC grants, tenant keys, invariants, and contract drift.
 - `npm run test:milestone1` passes unit, foundation, six worker tests, and migration checks.
+- Full Edge browser E2E passes the unchanged local 31-asset generation/export/reload flow.
 - Supabase CLI, PostgreSQL, and a container runtime are absent; SQL parsing,
   pgTAP execution, and live RLS/storage behavior remain unverified and gated.
-- No credentials, CLI link, database connection, PWA remote connection, model,
-  GPU inference, publisher, or production state was enabled.
+- No credentials, new CLI link, database connection, PWA remote connection,
+  model, GPU inference, publisher, or production state was enabled by this work.
+- The Claude/operator handoff reports a staging apply and nine passing RLS checks,
+  and ignored `.temp` metadata confirms a project was linked before this pass.
+  The committed test used for that claim contained an invalid UUID, a missing
+  required campaign, and the wrong JWT claim setting; the corrected checked-in
+  gate must be rerun before M1.5 is marked complete.
 
 ### Next entry
 

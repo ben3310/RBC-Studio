@@ -33,12 +33,15 @@ const rawByName=Object.fromEntries(ORDER.map((name,index)=>[
 const configPath=path.join(root,'infra','supabase','config.toml');
 const seedPath=path.join(root,'infra','supabase','seed.sql');
 const databaseTestPath=path.join(root,'infra','supabase','tests','0001_schema.test.sql');
-for(const requiredPath of [configPath,seedPath,databaseTestPath]){
+const rlsTestPath=path.join(root,'infra','supabase','tests','rls_negative_checks.sql');
+for(const requiredPath of [configPath,seedPath,databaseTestPath,rlsTestPath]){
   assert.ok(fs.existsSync(requiredPath),`missing local Supabase scaffold file: ${requiredPath}`);
 }
 const config=fs.readFileSync(configPath,'utf8');
 const seed=fs.readFileSync(seedPath,'utf8');
 const databaseTest=fs.readFileSync(databaseTestPath,'utf8');
+const rlsTest=fs.readFileSync(rlsTestPath,'utf8');
+const packageJson=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8'));
 const stripComments=value=>value.replace(/\/\*[\s\S]*?\*\//g,'').replace(/--.*$/gm,'');
 const normalize=value=>stripComments(value).toLowerCase().replace(/\s+/g,' ').trim();
 const sql=normalize(Object.values(rawByName).join('\n'));
@@ -205,9 +208,21 @@ assert.doesNotMatch(seed,/insert\s+into\s+auth\.users/i,
   'offline seed must not create authentication identities');
 assert.match(databaseTest,/select plan\(17\)/,'pgTAP runtime plan is missing');
 assert.match(databaseTest,/rollback;/,'database smoke suite must roll back');
+assert.match(rlsTest,/select plan\(1\)/,'RLS gate must emit a pgTAP plan');
+assert.match(rlsTest,/request\.jwt\.claim\.sub/,'RLS gate must set the claim used by auth.uid()');
+assert.match(rlsTest,/select pass\(/,'RLS gate must emit a passing TAP assertion');
+assert.match(rlsTest,/rollback;/,'RLS gate must roll back all synthetic identities/data');
+assert.doesNotMatch(rlsTest,/dashboard sql editor|request\.jwt\.claims|0000000000s1/i,
+  'RLS gate contains a remote-run instruction, wrong JWT setting, or invalid UUID');
+for(const [name,command] of Object.entries(packageJson.scripts||{})){
+  assert.doesNotMatch(command,/\bsupabase\s+(login|link)|\bsupabase\s+db\s+push/i,
+    `package script ${name} must not expose an ungated remote Supabase command`);
+}
+assert.ok(!packageJson.dependencies?.supabase&&!packageJson.devDependencies?.supabase,
+  'Supabase CLI dependency requires explicit installation/version authorization');
 
 console.log(
   `Migration scaffold verified: ${files.length} files, ${TABLES.length} core tables, `+
   `${TENANT_FKS.length} tenant-safe relationships, forced RLS, gated RPCs, contract parity, `+
-  'local config, synthetic seed, and pgTAP smoke plan.'
+  'local config, synthetic seed, pgTAP smoke plan, and nine-case RLS gate.'
 );
