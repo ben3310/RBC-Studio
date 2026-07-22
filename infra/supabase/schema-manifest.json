@@ -1,5 +1,5 @@
 {
-  "note": "Drift guard (M1.7). The app's understanding of the applied schema. Regenerate intent when migrations change: keep `tables` equal to the migration set and `appReads` to columns the remote client depends on. Checked by scripts/verify-db-types.mjs.",
+  "note": "Drift guard (M1.7). The app's understanding of the authored schema. Keep `tables`, `appReads`, and `rpc` aligned with forward migrations. Checked by scripts/verify-db-types.mjs.",
   "generatedFrom": "infra/supabase/migrations",
   "tables": [
     "app_approvals",

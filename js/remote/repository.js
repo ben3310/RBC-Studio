@@ -4,7 +4,7 @@
 // explicitly: remote mode NEVER silently uploads local campaigns — sync is an
 // explicit call, one-way, idempotent.
 import {CampaignStore} from '../state.js';
-import {buildSyncRequest,pieceFingerprint,RemoteIdMap} from './sync.js';
+import {buildSyncRequest,syncFingerprint,RemoteIdMap} from './sync.js';
 
 export class CampaignRepository{
   async listCampaigns(){throw new Error('not implemented');}
@@ -46,7 +46,7 @@ export class RemoteCampaignRepository extends CampaignRepository{
   async syncCampaign(localId,{force=false}={}){
     const record=this.store.load(localId);
     if(!record)return {synced:false,reason:'not-found'};
-    const fingerprint=pieceFingerprint(record);
+    const fingerprint=syncFingerprint(record);
     if(!force&&this.idMap.isCurrent(localId,fingerprint)){
       const mapped=this.idMap.get(localId);
       return {synced:false,reason:'unchanged',remoteCampaignId:mapped?.remoteCampaignId,remotePieceId:mapped?.remotePieceId};

@@ -13,7 +13,7 @@ const ORDER=[
   'assets_rights_and_attributes','factory_content_and_approvals',
   'destinations_and_accounts','jobs_publications_and_metrics',
   'audit_and_webhooks','constraints_indexes_and_triggers',
-  'row_level_security','storage_policies','rpc_functions'
+  'row_level_security','storage_policies','rpc_functions','sync_bridge'
 ];
 
 const files=fs.readdirSync(dir).filter(file=>file.endsWith('.sql')).sort();
@@ -220,6 +220,14 @@ for(const [name,command] of Object.entries(packageJson.scripts||{})){
 }
 assert.ok(!packageJson.dependencies?.supabase&&!packageJson.devDependencies?.supabase,
   'Supabase CLI dependency requires explicit installation/version authorization');
+expect(part('sync_bridge'),'create or replace function public.sync_local_campaign(payload jsonb)',
+  'explicit sync RPC must exist in a forward migration');
+expect(part('sync_bridge'),"grant execute on function public.sync_local_campaign(jsonb) to authenticated",
+  'sync RPC must be callable by authenticated users');
+reject(part('sync_bridge'),'grant execute on function public.sync_local_campaign(jsonb) to anon',
+  'anonymous users must not execute campaign sync');
+expect(part('sync_bridge'),'last_sync_idempotency_key',
+  'sync bridge must persist its idempotency key');
 
 console.log(
   `Migration scaffold verified: ${files.length} files, ${TABLES.length} core tables, `+

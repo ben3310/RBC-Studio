@@ -2,12 +2,12 @@
 // No network: the remote client is driven by a mock fetch. Asserts the flag-off
 // path never touches the network and that sync is idempotent.
 import assert from 'node:assert/strict';
-import {parseRemoteFactoryConfig} from '../js/remote/config.js';
+import {parseRemoteFactoryConfig,readStoredRemoteFactoryConfig,saveRemoteFactoryConfig,clearRemoteFactoryConfig} from '../js/remote/config.js';
 import {createRemoteFactoryClient} from '../js/remote/client.js';
 import {createAuthClient} from '../js/remote/auth.js';
 import {CampaignStore} from '../js/state.js';
 import {LocalCampaignRepository,RemoteCampaignRepository,HybridCampaignRepository} from '../js/remote/repository.js';
-import {pieceFingerprint,idempotencyKey,buildSyncRequest,stableStringify,RemoteIdMap} from '../js/remote/sync.js';
+import {pieceFingerprint,syncFingerprint,idempotencyKey,buildSyncRequest,stableStringify,RemoteIdMap} from '../js/remote/sync.js';
 
 class MemoryStorage{constructor(){this.map=new Map();}getItem(k){return this.map.get(k)??null;}setItem(k,v){this.map.set(k,String(v));}removeItem(k){this.map.delete(k);}}
 
@@ -18,11 +18,18 @@ const recAsame={id:'c1',fields:{fName:'Dior',fNo:'004',fProv:'Galliano'}}; // re
 const recAchanged={id:'c1',fields:{fNo:'004',fName:'Dior',fProv:'Galliano era'}};
 assert.equal(pieceFingerprint(recA),pieceFingerprint(recAsame),'fingerprint is order-independent');
 assert.notEqual(pieceFingerprint(recA),pieceFingerprint(recAchanged),'fingerprint changes with facts');
-assert.equal(idempotencyKey('c1',pieceFingerprint(recA)),buildSyncRequest(recA).idempotency_key,'idempotency key is derived deterministically');
+assert.equal(idempotencyKey('c1',syncFingerprint(recA)),buildSyncRequest(recA).idempotency_key,'idempotency key is derived from the full stable sync snapshot');
+assert.equal(syncFingerprint({...recA,updatedAt:'2026-01-01T00:00:00Z'}),syncFingerprint({...recA,updatedAt:'2026-07-22T00:00:00Z'}),'local save timestamps do not create remote mutations');
 
 // ---- config + flag-off client makes zero network calls ----
 const localConfig=parseRemoteFactoryConfig({});
 assert.deepEqual(localConfig,{enabled:false,supabaseUrl:'',anonKey:'',mode:'local'});
+const configStorage=new MemoryStorage();
+saveRemoteFactoryConfig({RBC_REMOTE_FACTORY:true,RBC_SUPABASE_URL:'https://x.supabase.co',RBC_SUPABASE_ANON_KEY:'anon'},configStorage);
+assert.equal(readStoredRemoteFactoryConfig(configStorage).RBC_REMOTE_FACTORY,true);
+clearRemoteFactoryConfig(configStorage);assert.deepEqual(readStoredRemoteFactoryConfig(configStorage),{});
+const servicePayload=btoa(JSON.stringify({role:'service_role'}));
+assert.throws(()=>parseRemoteFactoryConfig({RBC_REMOTE_FACTORY:true,RBC_SUPABASE_URL:'https://x.supabase.co',RBC_SUPABASE_ANON_KEY:`x.${servicePayload}.x`}),/service-role/);
 let calls=0;
 const localClient=createRemoteFactoryClient({config:localConfig,fetchImpl:async()=>{calls++;throw new Error('dark');}});
 assert.deepEqual(await localClient.queue(),{mode:'local',items:[]});
@@ -48,6 +55,10 @@ assert.deepEqual(await local.listReviewQueue(),{mode:'local',items:[]});
 
 // ---- remote repository: idempotent sync via mock client ----
 const remoteConfig=parseRemoteFactoryConfig({RBC_REMOTE_FACTORY:'true',RBC_SUPABASE_URL:'https://x.supabase.co',RBC_SUPABASE_ANON_KEY:'anon'});
+let dynamicSession=null,authorization='';
+const dynamicClient=createRemoteFactoryClient({config:remoteConfig,getSession:()=>dynamicSession,fetchImpl:async(_url,options)=>{authorization=options.headers.Authorization;return {ok:true,json:async()=>[]};}});
+await dynamicClient.queue();assert.equal(authorization,'Bearer anon');
+dynamicSession={access_token:'user-token'};await dynamicClient.queue();assert.equal(authorization,'Bearer user-token');assert.equal(dynamicClient.hasSession(),true);
 let syncCalls=0,lastPayload=null;
 const mockClient={enabled:true,mode:'remote',
   async queue(){return [{id:'ci1',status:'review'}];},

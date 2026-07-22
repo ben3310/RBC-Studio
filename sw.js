@@ -6,7 +6,7 @@ const APP_SHELL=[
   './','./index.html','./css/studio.css','./manifest.webmanifest','./icon.svg','./apple-touch-icon.png',
   './js/version.js','./js/app.js','./js/canvas.js','./js/state.js','./js/facts.js','./js/images.js','./js/validation.js','./js/zip.js','./js/calendar.js','./js/ai.js',
   './js/factory/core.js','./js/factory/copy.js','./js/factory/media.js','./js/factory/ui.js',
-  './js/remote/config.js','./js/remote/client.js','./packages/policy-core/index.js',
+  './js/remote/config.js','./js/remote/auth.js','./js/remote/client.js','./js/remote/repository.js','./js/remote/sync.js','./js/remote/index.js','./packages/policy-core/index.js',
   './js/copy/index.js','./js/copy/instagram.js','./js/copy/tiktok.js','./js/copy/telegram.js','./js/copy/threads.js','./js/copy/x.js',
   './js/templates/registry.js','./js/templates/primitives.js','./js/templates/collage.js','./js/templates/maison.js','./js/templates/editorial.js','./js/templates/noir.js','./js/templates/vitrine.js','./js/templates/atelier.js','./js/templates/gazette.js','./js/templates/snapshot.js','./js/templates/specimen.js','./js/templates/poet.js','./js/templates/runway.js','./js/templates/dossier.js'
 ];

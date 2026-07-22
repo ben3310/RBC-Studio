@@ -16,7 +16,11 @@ import {parseDmSections} from './copy/dm.js';
 import {makeSoldStory,makeSoldStoryPack} from './copy/sold.js';
 import {makeProofCaption,makeTeaseCaption} from './copy/arc.js';
 import {initContentFactory} from './factory/ui.js';
-import {REMOTE_FACTORY_CONFIG} from './remote/config.js';
+import {REMOTE_FACTORY_CONFIG,clearRemoteFactoryConfig,saveRemoteFactoryConfig} from './remote/config.js';
+import {createAuthClient} from './remote/auth.js';
+import {createRemoteFactoryClient} from './remote/client.js';
+import {createCampaignRepository} from './remote/repository.js';
+import {remoteEnabled,syncCampaign as syncCampaignToCloud} from './remote/index.js';
 
 const PLATFORMS=['instagram','tiktok','telegram','threads','x'];
 const outputIds={instagram:'outInstagram',tiktok:'outTiktok',telegram:'outTelegram',threads:'outThreads',x:'outX'};
@@ -73,6 +77,83 @@ factoryController=initContentFactory({
   canvasStudio,templates:TEMPLATE_META,getFacts:()=>campaignFacts(),getCampaignId:()=>active?.id||'campaign',downloadBlob,
   onChange(factory){if(applying||!active)return;active.factory=factory;scheduleSave();}
 });
+
+const remoteAuth=createAuthClient({config:REMOTE_FACTORY_CONFIG});
+const remoteClient=createRemoteFactoryClient({config:REMOTE_FACTORY_CONFIG,getSession:remoteAuth.getSession});
+const campaignRepository=createCampaignRepository({config:REMOTE_FACTORY_CONFIG,client:remoteClient,store});
+
+function setRemoteStatus(message){const element=document.getElementById('remoteStatus');if(element)element.textContent=message;}
+function setRemoteSessionState(signedIn){
+  document.getElementById('remoteSignIn').disabled=signedIn;
+  document.getElementById('remoteSignOut').disabled=!signedIn;
+  document.getElementById('remoteSyncCampaign').disabled=!signedIn;
+  document.getElementById('remoteRefreshQueue').disabled=!signedIn;
+}
+function renderRemoteQueue(items){
+  const queue=document.getElementById('remoteQueue');
+  queue.replaceChildren();
+  const rows=Array.isArray(items)?items:items?.items||[];
+  if(!rows.length){queue.hidden=true;return;}
+  rows.forEach(item=>{
+    const row=document.createElement('div');row.className='remote-queue-item';
+    const label=document.createElement('span');label.textContent=[item.platform,item.content_type].filter(Boolean).join(' · ')||item.id;
+    const state=document.createElement('span');state.textContent=item.status||'unknown';
+    row.append(label,state);queue.append(row);
+  });
+  queue.hidden=false;
+}
+function setupRemoteControls(){
+  const enabled=REMOTE_FACTORY_CONFIG.enabled;
+  document.getElementById('remoteModeLabel').textContent=enabled?'on · sign-in required':'off';
+  document.getElementById('remoteEnabled').checked=enabled;
+  document.getElementById('remoteUrl').value=REMOTE_FACTORY_CONFIG.supabaseUrl;
+  document.getElementById('remoteAnonKey').value=REMOTE_FACTORY_CONFIG.anonKey;
+  document.getElementById('remoteSessionControls').hidden=!enabled;
+  setRemoteSessionState(false);
+  if(enabled)setRemoteStatus('Remote mode is enabled. Sign in to sync; nothing uploads automatically.');
+
+  document.getElementById('remoteSaveConfig').addEventListener('click',()=>{
+    try{
+      saveRemoteFactoryConfig({
+        RBC_REMOTE_FACTORY:document.getElementById('remoteEnabled').checked,
+        RBC_SUPABASE_URL:document.getElementById('remoteUrl').value,
+        RBC_SUPABASE_ANON_KEY:document.getElementById('remoteAnonKey').value
+      });
+      setRemoteStatus('Settings saved. Reloading with the selected mode…');
+      location.reload();
+    }catch(error){setRemoteStatus(error.message);}
+  });
+  document.getElementById('remoteClearConfig').addEventListener('click',()=>{
+    clearRemoteFactoryConfig();
+    setRemoteStatus('Remote sync disabled. Reloading in local mode…');
+    location.reload();
+  });
+  document.getElementById('remoteSignIn').addEventListener('click',async()=>{
+    const button=document.getElementById('remoteSignIn');button.disabled=true;
+    try{
+      await remoteAuth.signIn(document.getElementById('remoteEmail').value.trim(),document.getElementById('remotePassword').value);
+      document.getElementById('remotePassword').value='';setRemoteSessionState(true);
+      setRemoteStatus('Signed in. Campaigns still sync only when you tap “Sync this campaign”.');
+    }catch(error){setRemoteSessionState(false);setRemoteStatus(error.message);}
+  });
+  document.getElementById('remoteSignOut').addEventListener('click',async()=>{
+    await remoteAuth.signOut();setRemoteSessionState(false);renderRemoteQueue([]);setRemoteStatus('Signed out. Local work remains available.');
+  });
+  document.getElementById('remoteSyncCampaign').addEventListener('click',async()=>{
+    const button=document.getElementById('remoteSyncCampaign');button.disabled=true;
+    try{
+      saveNow();
+      const result=await campaignRepository.syncCampaign(active.id);
+      setRemoteStatus(result.synced?`Synced this campaign · remote ID ${result.remoteCampaignId}`:'Already synced · no duplicate remote write.');
+    }catch(error){setRemoteStatus(error.message);}finally{button.disabled=!remoteAuth.getSession();}
+  });
+  document.getElementById('remoteRefreshQueue').addEventListener('click',async()=>{
+    const button=document.getElementById('remoteRefreshQueue');button.disabled=true;
+    try{const items=await campaignRepository.listReviewQueue({limit:100});renderRemoteQueue(items);setRemoteStatus(`Remote queue refreshed · ${Array.isArray(items)?items.length:0} item(s).`);}
+    catch(error){setRemoteStatus(error.message);}finally{button.disabled=!remoteAuth.getSession();}
+  });
+}
+setupRemoteControls();
 
 // empty state: only a genuinely first-ever launch (nothing migrated, no saved
 // campaigns) shows the 3-step card in place of the canvas; it clears the
@@ -450,7 +531,7 @@ function renderLibrary(){
       <div class="campaign-item-meta">NO. ${escapeHtml(item.archiveNo)} · ${escapeHtml(item.pieceName)} · ${timeAgo(item.updatedAt)}</div>
       <div class="campaign-item-progress"><span style="width:${((item.posted||item.ready)/item.total)*100}%"></span></div>
       <div class="campaign-item-meta">${item.complete?'campaign complete':item.ready+'/'+item.total+' ready'}</div>
-      <div class="campaign-item-actions"><button class="btn small" data-library-action="open">Open</button><button class="btn small ghost" data-library-action="duplicate">Duplicate</button><button class="btn small ghost" data-library-action="rename">Rename</button>${item.sold?'<button class="btn small ghost" data-library-action="sold-story">Sold story</button>':''}<button class="text-link" data-library-action="delete">Delete</button></div>
+      <div class="campaign-item-actions"><button class="btn small" data-library-action="open">Open</button><button class="btn small ghost" data-library-action="duplicate">Duplicate</button><button class="btn small ghost" data-library-action="rename">Rename</button>${item.sold?'<button class="btn small ghost" data-library-action="sold-story">Sold story</button>':''}${remoteEnabled()?'<button class="btn small ghost" data-library-action="sync">Sync to cloud</button>':''}<button class="text-link" data-library-action="delete">Delete</button></div>
     </article>`).join('')||'<p class="hint">No campaigns yet.</p>';
 }
 function toggleLibrary(show){const panel=document.getElementById('campaignLibrary');panel.hidden=!show;document.getElementById('campaignLibraryButton').setAttribute('aria-expanded',String(show));if(show){renderLibrary();renderLeaderboard();renderDeskReview();panel.scrollIntoView({behavior:'smooth',block:'start'});}}
@@ -658,6 +739,19 @@ document.getElementById('campaignList').addEventListener('click',async event=>{
   if(action==='duplicate'){saveNow();const duplicate=store.duplicate(id);try{await duplicateCampaignImages(id,duplicate.id);}catch(error){}await applyRecord(duplicate);toggleLibrary(false);return;}
   if(action==='rename'){const record=store.load(id);const title=prompt('Campaign name',record.title);if(title!==null)store.rename(id,title);if(active.id===id)active=store.load(id);renderLibrary();return;}
   if(action==='sold-story'){await openCampaign(id);document.getElementById('soldStoryCard')?.scrollIntoView({behavior:'smooth',block:'center'});return;}
+  if(action==='sync'){
+    saveNow();
+    try{
+      const result=await syncCampaignToCloud(store,id,{getCredentials:async()=>{
+        const email=prompt('Cloud sign-in email');if(!email)return null;
+        const password=prompt('Password for '+email);if(!password)return null;
+        return {email,password};
+      }});
+      if(result.synced)announce('Synced to cloud'+(result.remoteCampaignId?' · '+result.remoteCampaignId:''));
+      else announce('Cloud sync: '+(result.reason||'no change'));
+    }catch(error){announce('Cloud sync failed: '+error.message);}
+    return;
+  }
   if(action==='delete'&&confirm('Delete this campaign and its saved images?'))return deleteActiveOrOpenNext(id);
 });
 

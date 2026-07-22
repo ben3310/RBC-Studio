@@ -33,6 +33,16 @@ export function pieceFingerprint(record){
   return fnv1a(stableStringify(facts));
 }
 
+// Keep the persisted snapshot lossless except for the local write timestamp.
+// Saving the same form twice must not create a different remote mutation.
+export function localSyncSnapshot(record){
+  const snapshot=JSON.parse(JSON.stringify(record||{}));
+  delete snapshot.updatedAt;
+  return snapshot;
+}
+
+export function syncFingerprint(record){return fnv1a(stableStringify(localSyncSnapshot(record)));}
+
 // idempotency key is stable for the same local campaign + unchanged facts, so a
 // repeated sync collides on (account/org, key) and creates no duplicates.
 export function idempotencyKey(localId,fingerprint){
@@ -42,12 +52,13 @@ export function idempotencyKey(localId,fingerprint){
 export function buildSyncRequest(record,{schemaVersion='v6'}={}){
   if(!record||!record.id)throw new Error('sync requires a saved local record.');
   const fingerprint=pieceFingerprint(record);
+  const mutationFingerprint=syncFingerprint(record);
   return {
     local_campaign_id:record.id,
     local_schema_version:schemaVersion,
     piece_fingerprint:fingerprint,
-    idempotency_key:idempotencyKey(record.id,fingerprint),
-    local_snapshot:record,
+    idempotency_key:idempotencyKey(record.id,mutationFingerprint),
+    local_snapshot:localSyncSnapshot(record),
     // Milestone 1 syncs metadata only; binary upload intents come back from the
     // server for assets whose hash it does not yet hold.
     source_assets:[]

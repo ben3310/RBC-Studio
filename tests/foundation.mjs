@@ -46,7 +46,7 @@ assert.equal(networkCalls,0,'remote-off mode must make zero network requests');
 assert.throws(()=>parseRemoteFactoryConfig({RBC_REMOTE_FACTORY:'true'}),/valid Supabase URL/);
 assert.throws(()=>parseRemoteFactoryConfig({RBC_REMOTE_FACTORY:'true',RBC_SUPABASE_URL:'http://example.com',RBC_SUPABASE_ANON_KEY:'public'}),/HTTPS/);
 const remoteConfig=parseRemoteFactoryConfig({RBC_REMOTE_FACTORY:'true',RBC_SUPABASE_URL:'https://project.supabase.co',RBC_SUPABASE_ANON_KEY:'public-anon'});
-const remoteClient=createRemoteFactoryClient({config:remoteConfig,fetchImpl:async url=>{networkCalls++;assert.match(url,/\/rest\/v1\/content_items/);return {ok:true,json:async()=>[{id:'one',status:'review'}]};}});
+const remoteClient=createRemoteFactoryClient({config:remoteConfig,fetchImpl:async url=>{networkCalls++;assert.match(url,/\/rest\/v1\/app_content_items/);return {ok:true,json:async()=>[{id:'one',status:'review'}]};}});
 assert.equal((await remoteClient.queue())[0].id,'one');assert.equal(networkCalls,1);
 
 console.log('Milestone 0 foundation verification passed');

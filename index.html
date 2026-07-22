@@ -447,6 +447,38 @@
   </div>
 </section>
 
+<section id="remote" class="section-anchor remote-section">
+  <details class="ai-settings" id="remoteFactorySettings">
+    <summary>Optional Supabase sync · <span id="remoteModeLabel">off</span></summary>
+    <div class="ai-settings-body">
+      <p class="hint">Campaigns always save locally first. Remote sync is explicit, one-way, and never publishes a post.</p>
+      <label class="ready-label"><input type="checkbox" id="remoteEnabled"> Enable remote campaign sync</label>
+      <label for="remoteUrl">Supabase project URL</label>
+      <input id="remoteUrl" type="url" inputmode="url" autocomplete="url" placeholder="https://project.supabase.co">
+      <label for="remoteAnonKey">Supabase public anon key · never use a service-role key</label>
+      <input id="remoteAnonKey" type="password" autocomplete="off" placeholder="Public anon key">
+      <div class="factory-toolbar remote-toolbar">
+        <button class="btn small" id="remoteSaveConfig" type="button">Save settings</button>
+        <button class="btn small ghost" id="remoteClearConfig" type="button">Turn off & clear</button>
+      </div>
+      <div id="remoteSessionControls" hidden>
+        <label for="remoteEmail">Owner email</label>
+        <input id="remoteEmail" type="email" inputmode="email" autocomplete="username">
+        <label for="remotePassword">Password</label>
+        <input id="remotePassword" type="password" autocomplete="current-password">
+        <div class="factory-toolbar remote-toolbar">
+          <button class="btn small gold" id="remoteSignIn" type="button">Sign in</button>
+          <button class="btn small ghost" id="remoteSignOut" type="button" disabled>Sign out</button>
+          <button class="btn small" id="remoteSyncCampaign" type="button" disabled>Sync this campaign</button>
+          <button class="btn small ghost" id="remoteRefreshQueue" type="button" disabled>Refresh remote queue</button>
+        </div>
+      </div>
+      <div id="remoteStatus" class="inline-status" role="status" aria-live="polite">Remote sync is off. Local workflow is unchanged.</div>
+      <div id="remoteQueue" class="remote-queue" hidden></div>
+    </div>
+  </details>
+</section>
+
 <section id="queue" class="section-anchor" style="margin-top:36px;">
   <div class="section-intro">
     <div class="kicker">Publishing queue</div>

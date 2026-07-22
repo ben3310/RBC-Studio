@@ -47,15 +47,10 @@ for(const [table,columns] of Object.entries(manifest.appReads||{})){
   }
 }
 
-// every RPC the client calls should be named somewhere (migration or a
-// documented pending server task); warn-not-fail is wrong here, so require a
-// note when the RPC is not yet in a migration
+// every RPC the client calls must exist in the migration set
 for(const fn of manifest.rpc||[]){
   const present=sql.includes(`function app.${fn}`)||sql.includes(`function ${fn}`)||sql.includes(`create or replace function public.${fn}`);
-  if(!present){
-    // acceptable while the sync RPC is a pending server task, but must be tracked
-    assert.ok(manifest.note && manifest.note.length>0,`RPC ${fn} is not in migrations and no manifest note explains it`);
-  }
+  assert.ok(present,`RPC ${fn} is used by the app but missing from migrations`);
 }
 
 console.log(`DB drift check passed: ${migrationTables.length} tables aligned; ${Object.keys(manifest.appReads||{}).length} app-read table(s) column-verified.`);
